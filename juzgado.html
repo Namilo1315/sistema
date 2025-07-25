@@ -1,0 +1,1113 @@
+<html><head><base href="/" />
+    <meta charset="UTF-8">
+    <title>Juzgado Vial Zona Este</title>
+    <link rel="shortcut icon" href="./logo.png" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    
+    <style>
+    :root {
+      --primary-blue: #00BCD4;
+      --secondary-blue: #0097A7;
+      --primary-green: #4CAF50;
+      --secondary-green: #388E3C;
+      --primary-orange: #FF9800;
+      --secondary-orange: #F57C00;
+    }
+    
+    /* Estilos generales */
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: #f0f2f5;
+    }
+    
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .header {
+        background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+        color: white;
+        padding: 20px;
+        text-align: center;
+        border-radius: 8px;
+        margin-bottom: 30px;
+    }
+    
+    .search-container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+        max-width: 80%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .search-container .form-group {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+    
+    .search-container input {
+        flex: 1;
+    }
+    
+    .search-container button {
+        margin-top: 0;
+    }
+    
+    .tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .tab-button {
+        padding: 10px 20px;
+        border: none;
+        background: var(--primary-orange);
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+    
+    .tab-button:hover {
+        background: var(--secondary-orange);
+    }
+    
+    .tab-button.active {
+        background: var(--secondary-blue);
+    }
+    
+    .form-container {
+    width: 100%;
+    padding: 20px;             /* espacio interno para que no quede pegado */
+    border: 2px solid #dbdbdb; /* borde azul (podés cambiar el color) */
+    border-radius: 8px;        /* bordes redondeados */
+    background-color: #ffffff; /* color de fondo claro para resaltar */
+    box-sizing: border-box;    /* para que el padding no aumente el ancho */
+    margin: 10px 0;            /* margen arriba y abajo para separar */
+}
+
+    
+    
+    .form-group {
+        margin-bottom: 20px;
+        max-width: 100%;
+    }
+    
+    label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+    
+    input, select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+    
+    button {
+        background: var(--primary-green);
+        color: white;
+        padding: 12px 24px;
+        font-size: 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    button:hover {
+        background: var(--secondary-green);
+    }
+    
+    .edit-button {
+        background: #2196F3;
+        color: white;
+        padding: 5px 10px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    .edit-button:hover {
+        background: #1976D2;
+    }
+    
+    .delete-button {
+        background: #dc3545;
+        color: white;
+        padding: 5px 10px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-left: 5px;
+    }
+    
+    .delete-button:hover {
+        background: #c82333;
+    }
+    
+    .table-container {
+        width: 100%;
+        margin-top: 40px;
+        overflow-x: auto;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+
+/* Además, para pantallas pequeñas podemos ajustar el padding y márgenes */
+@media (max-width: 600px) {
+    .table-container {
+        padding: 8px 5px; /* menos padding en horizontal */
+        margin-top: 20px; /* opcional para reducir espacio vertical */
+    }
+}
+
+    
+    table {
+        width:100%;
+        border-collapse: collapse;
+    }
+    
+    th, td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+    
+    th {
+        background: var(--primary-blue);
+        color: white;
+        margin: 10px 0;
+    }
+    
+    .export-buttons {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+    }
+    
+    /* Add to existing CSS */
+    .form-row {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .form-row .form-group {
+        flex: 1;
+        margin-bottom: 0;
+    }
+    
+    .participante-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+        align-items: flex-start;
+    }
+    
+    .participante-row input {
+        flex: 1;
+    }
+    
+    .remove-participante {
+        background: #dc3545;
+        color: white;
+        padding: 5px 10px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    .secondary-button {
+        background: var(--primary-blue);
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+    .secondary-button1 {
+        background: var(--primary-orange);
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+    
+    .participantes-list {
+        font-size: 0.9em;
+        color: #666;
+        margin-top: 5px;
+    }
+    
+    
+    /* Update responsive CSS */
+    @media (max-width: 768px) {
+        .container {
+            padding: 10px;
+        }
+        
+        .tabs {
+            flex-direction: column;
+        }
+        
+        .form-container,
+        .search-container {
+            max-width: 95%;
+        }
+        
+        .search-container .form-group {
+            flex-direction: column;
+            gap: 15px;
+        }
+    
+        .form-row {
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .search-container button {
+            width: 100%;
+        }
+        
+        .export-buttons {
+            flex-direction: column;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            font-size: 14px;
+        }
+    }
+    
+    /* Additional table responsiveness */
+    @media (max-width: 480px) {
+        th, td {
+            padding: 8px;
+            font-size: 12px;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+        }
+    }
+    
+    .table-container a {
+        color: #2196F3;
+        text-decoration: none;
+        margin-right: 5px;
+    }
+    
+    .table-container a:hover {
+        text-decoration: underline;
+    }
+    
+    .table-container td:last-child {
+        white-space: nowrap;
+    }
+    
+    #accidentesTable tbody tr.esperando-audiencia {
+        background-color: #ffffff; /* white */
+    }
+    
+    #accidentesTable tbody tr.esperando-cedula {
+        background-color: #fff3cd; /* yellow */
+    }
+    
+    #accidentesTable tbody tr.apremio {
+        background-color: #ffeef0; /* red */
+    }
+    
+    #accidentesTable tbody tr.pagado {
+        background-color: #b6f46f; /* darker green */
+    }
+    
+    #accidentesTable tbody tr.finalizado {
+        background-color: #e3f0fd; /* light blue */
+    }
+    
+    #accidentesTable tbody tr.remitido {
+        background-color: #ffd4d4; /* light red */
+    }
+    
+    #actasTable tbody tr.esperando-cedula {
+        background-color: #ffecad; /* yellow */
+    }
+    
+    #actasTable tbody tr.apremio {
+        background-color: #f8d7da; /* red */
+    }
+    
+    #actasTable tbody tr.pagado {
+        background-color: #8bc34a; /* darker green */
+    }
+    
+    #actasTable tbody tr.remitida {
+        background-color: #ffd4d4; /* light red */
+    }
+    
+    .alcoholemia-alert {
+        color: red;
+        font-weight: bold;
+    }
+    
+    .pay-button {
+        background: #4CAF50;
+        color: white;
+        padding: 5px 10px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    .payment-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.8);
+        z-index: 1000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .payment-content {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 600px;
+        position: relative;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .payment-details {
+        margin: 20px 0;
+    }
+    
+    .payment-form {
+        border: 1px solid #ddd;
+        padding: 20px;
+        margin: 20px 0;
+    }
+    
+    .payment-total {
+        font-size: 24px;
+        font-weight: bold;
+        margin: 20px 0;
+    }
+    
+    .print-button {
+        background: #2196F3;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-left: 10px;
+    }
+    
+    .barcode-container {
+        text-align: center;
+        margin: 20px 0;
+        padding: 10px;
+        background: white;
+    }
+    
+    .barcode-container svg {
+        max-width: 100%;
+    }
+    
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        .payment-content, .payment-content * {
+            visibility: visible;
+        }
+        .payment-content {
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+        .payment-form, .print-button, .payment-content > button:last-child {
+            display: none !important;  
+        }
+        .barcode-container {
+            display: block !important;
+            visibility: visible !important;
+            margin-bottom: 30px;
+        }
+     
+    }
+    
+    #montoAPagar {
+        font-size: 24px;
+        font-weight: bold;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 5px;
+    }
+    .boton{
+        margin-top: 10px;
+    }
+    
+    </style>
+    
+    <div class="container">
+        <div class="header">
+            <h1>Juzgado Vial Zona Este</h1>
+        </div>
+    
+        <div class="search-container">
+            <h2>Buscar Registros</h2>
+            <div class="form-group">
+              <input type="text" id="searchInput" placeholder="Ingrese DNI, Dominio, N° de Acta o Accidente">
+              <button onclick="buscarRegistros()">Buscar</button>
+            </div>
+            <div id="searchResults"></div>
+          </div>
+    
+        <div class="tabs">
+            <button class="tab-button active " onclick="showTab('accidentes')">Accidentes Viales</button>
+         
+        </div>
+    
+        <div id="accidentes" class="tab-content">
+            <div class="form-container">
+                <h2>Registro de Accidente Vial</h2>
+                <form id="accidenteForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Número de Accidente:</label>
+                            <input type="text" id="numeroAccidente" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Nombre y Apellido:</label>
+                            <input type="text" id="nombreAccidente" required>
+                        </div>
+                        <div class="form-group">
+                            <label>DNI:</label>
+                            <input type="text" id="dniAccidente" required>
+                        </div>
+                    </div>
+    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Fecha del Accidente:</label>
+                            <input type="date" id="fechaAccidente" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Lugar del Hecho:</label>
+                            <input type="text" id="lugarAccidente" required>
+                        </div>
+                    </div>
+    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Dominio:</label>
+                            <input type="text" id="dominioAccidente" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha de Audiencia:</label>
+                            <input type="date" id="fechaAudiencia" required>
+                        </div>
+                    </div>
+    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Asignada a:</label>
+                            <select id="asignadaA">
+                                <option>Ivan</option>
+                                <option>Hugo</option>
+                                <option>Patricia</option>
+                                <option>Daniel</option>
+                                <option>Carolina</option>
+                                <option>Gabriela</option>
+                                <option>Otro</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo de Accidente:</label>
+                            <select id="tipoAccidente">
+                                <option>Común</option>
+                                <option>Emplace</option>
+                                <option>Archivo</option>
+                                <option>Otro</option>
+                            </select>
+                        </div>
+                    </div>
+    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Estado del Accidente:</label>
+                            <select id="estadoAccidente">
+                                <option>Esperando Audiencia</option>
+                                <option>Esperando Cedula</option>
+                                <option>Apremio</option>
+                                <option>Pagado</option>
+                                <option>Finalizado</option>
+                                <option>Remitido</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Fallo (PDF):</label>
+                            <input type="file" id="falloPdf" accept=".pdf">
+                        </div>
+                    </div>
+                   
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Valor de la Multa:</label>
+                            <input type="number" id="valorMultaAccidente" required>
+                        </div>
+                    </div>
+    
+                    <div class="form-group">
+                        <div class="button-group">
+                        <label>Participantes Adicionales:</label>
+                        <div id="participantesContainer"></div>
+                        <button type="button" id="btnAgregarParticipante" class="secondary-button">+ Agregar Participante</button>
+                        <button class="secondary-button1" type="submit">Guardar Accidente</button>
+                     </div>
+                      </div>
+                      
+    
+                    
+
+                    
+                </form>
+            </div>
+         </div>
+         <div class="container-fluid">
+          <div class="row justify-content-center">
+            <div class="col-12 col-md-10 col-lg-8 table-container">
+              <h2 class="">Registro de Accidentes</h2>
+              <table id="accidentesTable" class="">
+                <thead>
+                  <tr>
+                    <th>Número Accidente</th>
+                    <th>Nombre Apellido</th>
+                    <th>DNI</th>
+                    <th>Fecha</th>
+                    <th>Lugar</th>
+                    <th>Dominio</th>
+                    <th>Fecha Audiencia</th>
+                    <th>Asignada</th>
+                    <th>Tipo</th>
+                    <th>Estado</th>
+                    <th>Valor Multa</th>
+                    <th>Fallo</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+              <button class="btn btn-primary mt-2" id="btnExportAccidentes">Exportar Accidentes a Excel</button>
+            </div>
+          </div>
+        </div>
+        
+           
+        
+       
+          
+
+
+    
+    <script type="module">
+// app.js (o dentro de < type="module"> en tu HTML)
+import * as XLSX from "https://cdn.sheetjs.com/xlsx-latest/package/xlsx.mjs";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+import {
+  getFirestore, collection, getDocs, query, orderBy,
+  addDoc, setDoc, doc, deleteDoc
+} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+// Tu configuración Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyCLhhSoQ9gljKTPvWVZVGI3G8dU9dmi53Y",
+  authDomain: "mi-juzgado-447a4.firebaseapp.com",
+  projectId: "mi-juzgado-447a4",
+  storageBucket: "mi-juzgado-447a4.appspot.com",
+  messagingSenderId: "276360645206",
+  appId: "1:276360645206:web:e6c016d29d98add7bec9f7"
+};
+
+// Inicializar app y Firestore
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+let accidentesData = [];
+let actasData = [];
+let editingId = null;
+let editingType = null;
+
+// Funciones
+
+
+export async function cargarDatos() {
+  // Accidentes
+  const qAccidentes = query(collection(db, "accidentes"), orderBy("numero"));
+  const snapAccidentes = await getDocs(qAccidentes);
+  accidentesData = snapAccidentes.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  
+  updateTable("accidentes");
+
+}
+
+export async function guardarAccidente(accidente) {
+  if (editingId && editingType === "accidentes") {
+    await setDoc(doc(db, "accidentes", editingId), accidente);
+  } else {
+    await addDoc(collection(db, "accidentes"), accidente);
+  }
+  editingId = null;
+  editingType = null;
+  await cargarDatos();
+}
+
+
+
+export async function eliminarRegistro(type, id) {
+  if (confirm("¿Está seguro que desea eliminar este registro?")) {
+    await deleteDoc(doc(db, type, id));
+    await cargarDatos();
+  }
+}
+
+export function editarRegistro(type, id) {
+  editingId = id;
+  editingType = type;
+  let data = type === "accidentes"
+    ? accidentesData.find(item => item.id === id)
+    : actasData.find(item => item.id === id);
+  if (!data) return;
+
+  if (type === "accidentes") {
+    document.getElementById("numeroAccidente").value = data.numero || "";
+    document.getElementById("nombreAccidente").value = data.nombre || "";
+    document.getElementById("dniAccidente").value = data.dni || "";
+    document.getElementById("fechaAccidente").value = data.fecha || "";
+    document.getElementById("lugarAccidente").value = data.lugar || "";
+    document.getElementById("dominioAccidente").value = data.dominio || "";
+    document.getElementById("fechaAudiencia").value = data.fechaAudiencia || "";
+    document.getElementById("asignadaA").value = data.asignada || "";
+    document.getElementById("tipoAccidente").value = data.tipo || "";
+    document.getElementById("estadoAccidente").value = data.estado || "";
+    document.getElementById("valorMultaAccidente").value = data.valorMulta || 0;
+
+    const container = document.getElementById("participantesContainer");
+    container.innerHTML = "";
+    if (data.participantes && data.participantes.length > 0) {
+      data.participantes.forEach(p => {
+        const div = document.createElement("div");
+        div.className = "participante-row";
+        div.innerHTML = `
+          <input type="text" value="${p.nombre}" class="participante-nombre" required>
+          <input type="text" value="${p.dni}" class="participante-dni" required>
+          <input type="text" value="${p.dominio}" class="participante-dominio" required>
+          <button type="button" onclick="this.parentElement.remove()">×</button>
+        `;
+        container.appendChild(div);
+      });
+    }
+  } else {
+    document.getElementById("numeroActa").value = data.numero || "";
+    document.getElementById("nombreActa").value = data.nombre || "";
+    document.getElementById("dniActa").value = data.dni || "";
+    document.getElementById("fechaActa").value = data.fecha || "";
+    document.getElementById("dominioActa").value = data.dominio || "";
+    document.getElementById("alcoholemiaActa").value = data.alcoholemia || "";
+    document.getElementById("tipoInfraccion").value = data.infraccion || "";
+    document.getElementById("conSecuestro").value = data.secuestro || "";
+    document.getElementById("estadoActa").value = data.estado || "";
+    document.getElementById("valorMulta").value = data.valor || 0;
+  }
+}
+// Escuchar el evento solo cuando el DOM esté cargado
+document.addEventListener("DOMContentLoaded", () => {
+  const btnAgregar = document.getElementById("btnAgregarParticipante");
+
+  if (btnAgregar) {
+    btnAgregar.addEventListener("click", () => {
+      const container = document.getElementById("participantesContainer");
+
+      const div = document.createElement("div");
+      div.className = "participante-row";
+      div.innerHTML = `
+        <input type="text" placeholder="Nombre" class="participante-nombre" required>
+        <input type="text" placeholder="DNI" class="participante-dni" required>
+        <input type="text" placeholder="Dominio" class="participante-dominio" required>
+        <button type="button" class="btnEliminar">×</button>
+      `;
+
+      container.appendChild(div);
+
+      // Agregar funcionalidad al botón eliminar de este participante
+      div.querySelector(".btnEliminar").addEventListener("click", () => {
+        div.remove();
+      });
+    });
+  }
+});
+
+
+export function updateTable(type) {
+  const tableBody = document.getElementById(`${type}Table`).querySelector("tbody");
+  tableBody.innerHTML = "";
+  const data = type === "accidentes" ? accidentesData : actasData;
+
+  data.forEach(item => {
+    const row = tableBody.insertRow();
+    if (type === "accidentes") {
+      row.className = (item.estado || "").toLowerCase().replace(/ /g, "-");
+
+      row.insertCell().textContent = item.numero || "";
+
+      const nombreCell = row.insertCell();
+      nombreCell.textContent = item.nombre || "";
+      if (item.participantes?.length) {
+        const lista = document.createElement("div");
+        lista.className = "participantes-list";
+        lista.innerHTML = item.participantes.map(p => p.nombre).join("<br>");
+        nombreCell.appendChild(lista);
+      }
+
+      const dniCell = row.insertCell();
+      dniCell.textContent = item.dni || "";
+      if (item.participantes?.length) {
+        const lista = document.createElement("div");
+        lista.className = "participantes-list";
+        lista.innerHTML = item.participantes.map(p => p.dni).join("<br>");
+        dniCell.appendChild(lista);
+      }
+
+      row.insertCell().textContent = item.fecha || "";
+      row.insertCell().textContent = item.lugar || "";
+
+      const dominioCell = row.insertCell();
+      dominioCell.textContent = item.dominio || "";
+      if (item.participantes?.length) {
+        const lista = document.createElement("div");
+        lista.className = "participantes-list";
+        lista.innerHTML = item.participantes.map(p => p.dominio).join("<br>");
+        dominioCell.appendChild(lista);
+      }
+
+      row.insertCell().textContent = item.fechaAudiencia || "";
+      row.insertCell().textContent = item.asignada || "";
+      row.insertCell().textContent = item.tipo || "";
+      row.insertCell().textContent = item.estado || "";
+      row.insertCell().textContent = item.valorMulta || 0;
+
+      const pdfCell = row.insertCell();
+      if (item.fallo) {
+        const link = document.createElement("a");
+        link.href = "javascript:void(0)";
+        link.textContent = "PDF";
+        link.onclick = () => {
+          const modal = document.createElement("div");
+          modal.style.cssText = `
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000;
+          `;
+          const closeBtn = document.createElement("button");
+          closeBtn.textContent = "×";
+          closeBtn.style.cssText = `
+            position: absolute; top: 10px; right: 10px;
+            background: white; border: none; font-size: 24px;
+            cursor: pointer; padding: 5px 10px; border-radius: 5px;
+          `;
+          closeBtn.onclick = () => modal.remove();
+
+          const viewer = document.createElement("iframe");
+          viewer.src = item.fallo;
+          viewer.style.cssText = `
+            width: 90%; height: 90%; border: none; background: white;
+          `;
+
+          modal.appendChild(closeBtn);
+          modal.appendChild(viewer);
+          document.body.appendChild(modal);
+        };
+        pdfCell.appendChild(link);
+      }
+    } else {
+      row.className = (item.estado || "").toLowerCase().replace(/ /g, "-");
+      Object.values(item).forEach(val => {
+        row.insertCell().textContent = val || "";
+      });
+    }
+    function exportToExcelAccidentes() {
+  const table = document.getElementById("accidentesTable");
+  if (!table) return alert("Tabla de accidentes no encontrada.");
+
+  // Copiar solo el contenido de la tabla
+  let tableHTML = table.outerHTML.replace(/ /g, '%20');
+
+  // Crear enlace de descarga
+  const downloadLink = document.createElement("a");
+  downloadLink.href = `data:application/vnd.ms-excel, ${tableHTML}`;
+  downloadLink.download = "accidentes.xls";
+  document.body.appendChild(downloadLink);
+  downloadLink.click();
+  document.body.removeChild(downloadLink);
+}
+
+// Esperar que el DOM esté listo y asignar el botón
+document.addEventListener("DOMContentLoaded", () => {
+  const btnExport = document.getElementById("btnExportAccidentes");
+  if (btnExport) {
+    btnExport.addEventListener("click", exportToExcelAccidentes);
+  }
+});
+
+    // Acciones
+    const actionsCell = row.insertCell();
+    const editBtn = document.createElement("button");
+    editBtn.className = "edit-button";
+    editBtn.textContent = "Editar";
+    editBtn.onclick = () => editarRegistro(type, item.id);
+    actionsCell.appendChild(editBtn);
+
+    const delBtn = document.createElement("button");
+    delBtn.className = "delete-button";
+    delBtn.textContent = "🗑️";
+    delBtn.onclick = () => eliminarRegistro(type, item.id);
+    actionsCell.appendChild(delBtn);
+  });
+}
+
+
+
+
+// --- Función de búsqueda ---
+export async function buscarRegistros() {
+  const searchTerm = document.getElementById("searchInput").value.trim().toLowerCase();
+  const resultsDiv = document.getElementById("searchResults");
+  resultsDiv.innerHTML = "<p>Buscando...</p>";
+
+  const accidentesSnap = await getDocs(collection(db, "accidentes"));
+  const actasSnap = await getDocs(collection(db, "actas"));
+
+  const accidentes = [];
+  accidentesSnap.forEach(doc => accidentes.push(doc.data()));
+
+  const actas = [];
+  actasSnap.forEach(doc => actas.push(doc.data()));
+
+  const resultadosAccidentes = accidentes.filter(a => 
+  a.dni === searchTerm ||
+  a.dominio?.toLowerCase() === searchTerm ||
+  a.numero === searchTerm ||
+  (a.estado && a.estado.toLowerCase() === searchTerm.toLowerCase()) ||
+  (a.participantes && a.participantes.some(p =>
+    p.dni === searchTerm || p.dominio?.toLowerCase() === searchTerm
+  ))
+);
+ 
+
+const resultadosActas = actas.filter(a =>
+  a.dni === searchTerm ||
+  a.dominio?.toLowerCase() === searchTerm ||
+  a.numero === searchTerm ||
+  (a.estado && a.estado.toLowerCase() === searchTerm.toLowerCase())
+);
+
+  let html = "<h3>Resultados de la búsqueda:</h3>";
+
+  if (resultadosAccidentes.length) {
+    html += "";
+    resultadosAccidentes.forEach(acc => {
+      let participantesText = "";
+      if (acc.participantes && acc.participantes.length) {
+        participantesText = "<br>Participantes: " + acc.participantes.map(p =>
+          `${p.nombre} (DNI: ${p.dni}, Dominio: ${p.dominio})`
+        ).join(", ");
+      }
+      html += `<p><strong>Accidente:</strong> ${acc.numero} - ${acc.nombre} - ${acc.dni}<br>
+                Estado: ${acc.estado} - Dominio: ${acc.dominio}<br>
+                Resolvio: ${acc.asignada} <br>
+                Valor Multa: $${acc.valorMulta || 0}
+                <button class="pay-button">Pagar</button>${participantesText}</p>`;
+    });
+  }
+
+  if (resultadosActas.length) {
+    html += "<h4>Actas:</h4>";
+    resultadosActas.forEach(acta => {
+      html += `<p><strong>Acta:</strong> ${acta.numero} - ${acta.nombre} - ${acta.dni}<br>
+                Fecha: ${acta.fecha} - Infracción: ${acta.infraccion}<br>
+                Valor: $${acta.valor || 0}</p>`;
+    });
+  }
+
+  if (!resultadosAccidentes.length && !resultadosActas.length) {
+    html += "<p>No se encontraron registros.</p>";
+  }
+
+  resultsDiv.innerHTML = html;
+}
+
+// ✅ Hacer disponible la función al HTML
+window.buscarRegistros = buscarRegistros;
+
+// Listeners para formularios, para agregarlos en tu HTML
+
+document.getElementById("accidenteForm").addEventListener("submit", async e => {
+  e.preventDefault();
+
+  const participantes = [];
+  document.querySelectorAll(".participante-row").forEach(row => {
+    participantes.push({
+      nombre: row.querySelector(".participante-nombre").value,
+      dni: row.querySelector(".participante-dni").value,
+      dominio: row.querySelector(".participante-dominio").value
+    });
+  });
+
+  const falloPdf = document.getElementById("falloPdf").files[0];
+
+  if (falloPdf) {
+    const reader = new FileReader();
+    reader.onload = async event => {
+      const pdfUrl = event.target.result;
+
+      const accidente = {
+        numero: document.getElementById("numeroAccidente").value,
+        nombre: document.getElementById("nombreAccidente").value,
+        dni: document.getElementById("dniAccidente").value,
+        fecha: document.getElementById("fechaAccidente").value,
+        lugar: document.getElementById("lugarAccidente").value,
+        dominio: document.getElementById("dominioAccidente").value,
+        fechaAudiencia: document.getElementById("fechaAudiencia").value,
+        asignada: document.getElementById("asignadaA").value,
+        tipo: document.getElementById("tipoAccidente").value,
+        estado: document.getElementById("estadoAccidente").value,
+        valorMulta: Number(document.getElementById("valorMultaAccidente").value),
+        fallo: pdfUrl,
+        participantes: participantes
+      };
+
+      await guardarAccidente(accidente);
+      e.target.reset();
+      document.getElementById("participantesContainer").innerHTML = "";
+    };
+    reader.readAsDataURL(falloPdf);
+  } else {
+    const accidente = {
+      numero: document.getElementById("numeroAccidente").value,
+      nombre: document.getElementById("nombreAccidente").value,
+      dni: document.getElementById("dniAccidente").value,
+      fecha: document.getElementById("fechaAccidente").value,
+      lugar: document.getElementById("lugarAccidente").value,
+      dominio: document.getElementById("dominioAccidente").value,
+      fechaAudiencia: document.getElementById("fechaAudiencia").value,
+      asignada: document.getElementById("asignadaA").value,
+      tipo: document.getElementById("tipoAccidente").value,
+      estado: document.getElementById("estadoAccidente").value,
+      valorMulta: Number(document.getElementById("valorMultaAccidente").value),
+      fallo: "",
+      participantes: participantes
+    };
+    await guardarAccidente(accidente);
+    e.target.reset();
+    document.getElementById("participantesContainer").innerHTML = "";
+  }
+});
+
+
+document.getElementById('btnExportAccidentes').addEventListener('click', () => {
+  const table = document.getElementById('accidentesTable');
+  const headers = [];
+  const data = [];
+
+  const excludeIndexes = []; // índices de columnas a excluir
+  const headerRow = table.querySelector("thead tr");
+  const ths = headerRow.querySelectorAll("th");
+
+  // Armar los headers y detectar qué columnas excluir
+  ths.forEach((th, index) => {
+    const headerText = th.innerText.trim().toUpperCase();
+    if (
+      headerText === "DNI" ||
+      headerText === "NOMBRE APELLIDO" ||
+      headerText === "LUGAR" ||
+      headerText === "FALLO" ||
+      headerText === "ACCIONES"
+    ) {
+      excludeIndexes.push(index);
+    } else {
+      headers.push(headerText);
+    }
+  });
+
+  data.push(headers);
+
+  const rows = table.querySelectorAll("tbody tr");
+  rows.forEach(row => {
+    const rowData = [];
+    const cells = row.querySelectorAll("td");
+    cells.forEach((cell, index) => {
+      if (!excludeIndexes.includes(index)) {
+        rowData.push(cell.innerText.trim());
+      }
+    });
+    data.push(rowData);
+  });
+
+  // Crear hoja y exportar
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Accidentes');
+  XLSX.writeFile(wb, 'Accidentes_filtrados.xlsx');
+});
+
+
+
+
+// Inicializar al cargar DOM
+document.addEventListener("DOMContentLoaded", cargarDatos);
+
+
+
+    </script>
+
+
+    </body>
+    </html>
