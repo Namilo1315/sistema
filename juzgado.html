@@ -550,6 +550,8 @@
     
         <div class="tabs">
             <button class="tab-button active " onclick="showTab('accidentes')">Accidentes Viales</button>
+            <a href="./notificaciones.html" target="_blank"><button class="tab-button" id="btnGenerarMensaje">Generar Notificaciones</button></a>
+
          
         </div>
     
@@ -573,9 +575,13 @@
                     </div>
     
                     <div class="form-row">
-                        <div class="form-group">
+                      <div class="form-group">
                             <label>Fecha del Accidente:</label>
                             <input type="date" id="fechaAccidente" required>
+                        </div>
+                        <div class="form-group">
+                          <label>Hora de la Audiencia:</label>
+                          <input type="time" id="horaAudiencia" required>
                         </div>
                         <div class="form-group">
                             <label>Lugar del Hecho:</label>
@@ -713,6 +719,8 @@
 
 <!-- Sonido -->
 <audio id="alertaSonido" src="https://cdn.pixabay.com/audio/2021/08/04/audio_15d0178e27.mp3" preload="auto"></audio>
+
+
 <style>
   .alerta-audiencia {
     position: fixed;
@@ -852,6 +860,7 @@ export function editarRegistro(type, id) {
     document.getElementById("lugarAccidente").value = data.lugar || "";
     document.getElementById("dominioAccidente").value = data.dominio || "";
     document.getElementById("fechaAudiencia").value = data.fechaAudiencia || "";
+    document.getElementById("horaAudiencia").value = data.horaAudiencia || "";
     document.getElementById("asignadaA").value = data.asignada || "";
     document.getElementById("tipoAccidente").value = data.tipo || "";
     document.getElementById("estadoAccidente").value = data.estado || "";
@@ -1090,7 +1099,7 @@ const resultadosActas = actas.filter(a =>
       }
       html += `<p><strong>Accidente:</strong> ${acc.numero} - ${acc.nombre} - ${acc.dni}<br>
                 Estado: ${acc.estado} - Dominio: ${acc.dominio}<br>
-                Resolvio: ${acc.asignada} <br>
+                Resolvio: ${acc.asignada} - Audiencia:${acc.fecha} - Hora:${acc.horaAudiencia}<br>
                 Valor Multa: $${acc.valorMulta || 0}
                 <button class="pay-button">Pagar</button>${participantesText}</p>`;
     });
@@ -1144,6 +1153,7 @@ document.getElementById("accidenteForm").addEventListener("submit", async e => {
         lugar: document.getElementById("lugarAccidente").value,
         dominio: document.getElementById("dominioAccidente").value,
         fechaAudiencia: document.getElementById("fechaAudiencia").value,
+        horaAudiencia: document.getElementById("horaAudiencia").value,
         asignada: document.getElementById("asignadaA").value,
         tipo: document.getElementById("tipoAccidente").value,
         estado: document.getElementById("estadoAccidente").value,
@@ -1166,6 +1176,7 @@ document.getElementById("accidenteForm").addEventListener("submit", async e => {
       lugar: document.getElementById("lugarAccidente").value,
       dominio: document.getElementById("dominioAccidente").value,
       fechaAudiencia: document.getElementById("fechaAudiencia").value,
+      horaAudiencia: document.getElementById("horaAudiencia").value,
       asignada: document.getElementById("asignadaA").value,
       tipo: document.getElementById("tipoAccidente").value,
       estado: document.getElementById("estadoAccidente").value,
@@ -1348,7 +1359,7 @@ document.getElementById("btnVolver").addEventListener("click", function () {
     document.getElementById("btnVolver").classList.add("d-none");
 });
 
-
+ 
     </script>
 
 
