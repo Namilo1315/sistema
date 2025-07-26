@@ -94,37 +94,17 @@
     .btn-eliminar:hover {
       background: #c0392b;
     }
-    html, body {
-  height: 100%;
-  margin: 0;
-}
-
-body {
-  display: flex;
-  justify-content: center; /* centra horizontal */
-  align-items: center;     /* centra vertical */
-  height: 100vh;           /* toda la altura visible */
-  overflow: auto;
-}
-
-.container-scaled {
-  transform: scale(0.8);
-  transform-origin: top left;
-  width: 125%;
-  height: 125%;
-  /* para que el punto de transformación quede centrado, 
-     cambiamos el origen y usamos translate */
-  transform-origin: center center;
-}
-
+    html{
+      transform: scale(0.9);
+      transform-origin: center center;
+    }
+    
   </style>
 </head>
 <body>
- <div class="container-scaled">
-  <h1 class="text-center">Mensajes generados para WhatsApp</h1>
-  <div class="" id="mensajes">Cargando mensajes...</div>
- </div>
 
+<h1 class="text-center">Mensajes generados para WhatsApp</h1>
+<div class="" id="mensajes">Cargando mensajes...</div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
