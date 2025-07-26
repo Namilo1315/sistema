@@ -481,7 +481,57 @@
     .boton{
         margin-top: 10px;
     }
-    
+    .alerta-audiencia {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: white;
+  color: #1A2A4A; /* texto oscuro */
+  padding: 20px 20px 20px 90px; /* espacio para el robot a la izquierda */
+  border-radius: 15px;
+  border: 3px solid #00aaff; /* borde celeste */
+  box-shadow: 0 0 20px rgba(0, 170, 255, 0.4);
+  font-size: 16px;
+  z-index: 1000;
+  max-width: 300px;
+  animation: aparecer 1s ease-in-out;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  font-family: Arial, sans-serif;
+  position: fixed;
+}
+
+.cerrar-btn {
+  position: absolute;
+  top: 5px;
+  right: 8px;
+  background: none;
+  color: #00aaff; /* celeste */
+  border: none;
+  font-size: 22px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.3s ease;
+  padding: 0;
+  line-height: 1;
+}
+
+.cerrar-btn:hover {
+  color: #0077cc;
+}
+
+/* Contenedor para el robot a la izquierda */
+.robot-icon {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 50px;
+  height: 50px;
+}
+
+
     </style>
     
     <div class="container">
@@ -560,7 +610,7 @@
                         <div class="form-group">
                             <label>Tipo de Accidente:</label>
                             <select id="tipoAccidente">
-                                <option>Común</option>
+                                <option>Comun</option>
                                 <option>Emplace</option>
                                 <option>Archivo</option>
                                 <option>Otro</option>
@@ -613,7 +663,17 @@
          <div class="container-fluid">
           <div class="row justify-content-center">
             <div class="col-12 col-md-10 col-lg-8 table-container">
-              <h2 class="">Registro de Accidentes</h2>
+              
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h2 class="mb-0">Registro de Accidentes</h2>
+                <div class="input-group input-group-sm w-auto mb-3">
+                  <input type="text" id="filtroAccidentes" class="form-control" placeholder="Buscar...">
+                  <button id="btnBuscarAccidente" class="btn btn-secondary btn-sm">Buscar</button>
+                  <button id="btnVolver" class="btn btn-outline-primary btn-sm d-none">Volver</button>
+                </div>
+                
+              </div>
+              
               <table id="accidentesTable" class="">
                 <thead>
                   <tr>
@@ -634,15 +694,83 @@
                 </thead>
                 <tbody></tbody>
               </table>
+        
               <button class="btn btn-primary mt-2" id="btnExportAccidentes">Exportar Accidentes a Excel</button>
             </div>
           </div>
         </div>
         
            
-        
-       
-          
+        <!-- Alerta visual -->
+<div id="alertaAudiencia" class="alerta-audiencia" style="display:none;">
+  <button id="cerrarAlerta" class="cerrar-btn" aria-label="Cerrar alerta">✖</button>
+  <div class="alerta-contenido">
+   
+    <div class="alerta-titulo">¡Hoy tenemos audiencias...!</div>
+    <ul id="listaAudiencias"></ul>
+  </div>
+</div>
+
+<!-- Sonido -->
+<audio id="alertaSonido" src="https://cdn.pixabay.com/audio/2021/08/04/audio_15d0178e27.mp3" preload="auto"></audio>
+<style>
+  .alerta-audiencia {
+    position: fixed;
+    bottom: 20px;
+    right: 30px;
+    background: #ffffff;
+    color: #1A2A4A;
+    padding: 15px 18px;
+    border-radius: 12px;
+    border: 2px solid #022f45;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    font-size: 13px;
+    z-index: 1000;
+    width: 270px;
+    font-weight: 500;
+  }
+  
+  .alerta-contenido {
+    text-align: center;
+  }
+  
+  .alerta-titulo {
+    font-size: 15px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #0077cc;
+  }
+  
+  #listaAudiencias {
+    margin: 0;
+    padding-left: 30px;
+    text-align: left;
+    max-height: 120px;
+    overflow-y: auto;
+    color: #0b2240;
+    font-size: 13px;
+  }
+  
+  .cerrar-btn {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    background: none;
+    color: #ff0000c4;
+    border: none;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    padding: 0;
+    line-height: 1;
+  }
+  
+  .cerrar-btn:hover {
+    color: #0077cc;
+  }
+     
+ </style>   
 
 
     
@@ -1104,6 +1232,121 @@ document.getElementById('btnExportAccidentes').addEventListener('click', () => {
 // Inicializar al cargar DOM
 document.addEventListener("DOMContentLoaded", cargarDatos);
 
+// Mostrar alerta si hay audiencias HOY con robot bonito
+export async function verificarAudienciasHoy() {
+  const hoy = new Date().toISOString().split("T")[0];
+  const q = query(collection(db, "accidentes"));
+  const snapshot = await getDocs(q);
+  let audienciasHoy = [];
+
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    if (data.fechaAudiencia === hoy && data.asignada) {
+      audienciasHoy.push({
+        numero: data.numero || "Sin número",
+        asignadaA: data.asignada || "Sin asignación"
+      });
+    }
+  });
+
+  if (audienciasHoy.length > 0) {
+    const alerta = document.getElementById("alertaAudiencia");
+    const lista = document.getElementById("listaAudiencias");
+    const sonido = document.getElementById("alertaSonido");
+
+    lista.innerHTML = "";
+    audienciasHoy.forEach(item => {
+      const li = document.createElement("li");
+      li.innerHTML = `<span class='icon'>✅</span> <strong>${item.numero}- <em>${item.asignadaA}</em></strong> `;
+      lista.appendChild(li);
+    });
+
+    alerta.style.display = "flex";
+
+    sonido.play().catch(() => console.log("No se pudo reproducir el sonido"));
+
+    const btnCerrar = document.getElementById("cerrarAlerta");
+    if (btnCerrar) {
+      btnCerrar.addEventListener("click", () => {
+        alerta.style.display = "none";
+      });
+    }
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  verificarAudienciasHoy();
+});
+document.getElementById("btnBuscarAccidente").addEventListener("click", () => {
+  const estadoSeleccionado = document.getElementById("estadoAccidente").value.trim().toLowerCase();
+  const filas = document.querySelectorAll("#accidentesTable tbody tr");
+
+  filas.forEach(fila => {
+    const columnaEstado = fila.children[9]; // Columna 10 (índice 9)
+    const estadoFila = columnaEstado.textContent.trim().toLowerCase();
+
+    // Si el estado del filtro está vacío, mostramos todo
+    if (!estadoSeleccionado) {
+      fila.style.display = "";
+      return;
+    }
+
+    // Comparamos texto estrictamente
+    if (estadoFila === estadoSeleccionado) {
+      fila.style.display = "";
+    } else {
+      fila.style.display = "none";
+    }
+  });
+});
+  
+document.getElementById("btnBuscarAccidente").addEventListener("click", function () {
+  const filtro = document.getElementById("filtroAccidentes").value.toLowerCase().trim();
+  const tabla = document.getElementById("accidentesTable");
+  const filas = tabla.getElementsByTagName("tr");
+
+  for (let i = 1; i < filas.length; i++) {
+    const celdas = filas[i].getElementsByTagName("td");
+    let encontrado = false;
+
+    for (let j = 0; j < celdas.length; j++) {
+      const texto = celdas[j].textContent.toLowerCase();
+      if (texto.includes(filtro)) {
+        encontrado = true;
+        break;
+      }
+    }
+
+    filas[i].style.display = encontrado ? "" : "none";
+  }
+});
+document.getElementById("btnBuscarAccidente").addEventListener("click", function () {
+    const termino = document.getElementById("filtroAccidentes").value.toLowerCase();
+    const tabla = document.getElementById("accidentesTable");
+    const filas = tabla.getElementsByTagName("tr");
+
+    // Mostrar botón "Volver"
+    document.getElementById("btnVolver").classList.remove("d-none");
+
+    for (let i = 1; i < filas.length; i++) {
+        let fila = filas[i];
+        let textoFila = fila.innerText.toLowerCase();
+        fila.style.display = textoFila.includes(termino) ? "" : "none";
+    }
+});
+
+document.getElementById("btnVolver").addEventListener("click", function () {
+    const filas = document.getElementById("accidentesTable").getElementsByTagName("tr");
+
+    // Mostrar todas las filas
+    for (let i = 1; i < filas.length; i++) {
+        filas[i].style.display = "";
+    }
+
+    // Limpiar campo y ocultar botón "Volver"
+    document.getElementById("filtroAccidentes").value = "";
+    document.getElementById("btnVolver").classList.add("d-none");
+});
 
 
     </script>
