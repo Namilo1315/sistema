@@ -177,6 +177,8 @@
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
+   
+
 
 /* Además, para pantallas pequeñas podemos ajustar el padding y márgenes */
 @media (max-width: 600px) {
@@ -537,18 +539,23 @@
 .tab-button {
   text-decoration: none; /* quita subrayado */
 }
+th {
+  background:  #0097A7;
+  color: white;
+  margin: 10px 0;
+}
 
     </style>
     
     <div class="container">
         <div class="header">
-            <h1>Juzgado Vial Zona Este</h1>
+            <h3>Juzgado Vial Zona Este</h3>
         </div>
     
         <div class="search-container">
-            <h2>Buscar Registros</h2>
+            <h2>Buscar Accidente</h2>
             <div class="form-group">
-              <input type="text" id="searchInput" placeholder="Ingrese DNI, Dominio, N° de Acta o Accidente">
+              <input type="text" id="searchInput" placeholder="Ingrese DNI, Dominio, N° Accidente">
               <button onclick="buscarRegistros()">Buscar</button>
             </div>
             <div id="searchResults"></div>
@@ -563,7 +570,7 @@
     
         <div id="accidentes" class="tab-content">
             <div class="form-container">
-                <h2>Registro de Accidente Vial</h2>
+                <h2>Carga de Accidente</h2>
                 <form id="accidenteForm">
                     <div class="form-row">
                         <div class="form-group">
@@ -657,11 +664,11 @@
                     </div>
     
                     <div class="form-group">
-                        <div class="button-group">
+                        <div class="button-group ">
                         <label>Participantes Adicionales:</label>
                         <div id="participantesContainer"></div>
-                        <button type="button" id="btnAgregarParticipante" class="secondary-button">+ Agregar Participante</button>
-                        <button class="secondary-button1" type="submit">Guardar Accidente</button>
+                        <button type="button" id="btnAgregarParticipante" class="tab-button active">+ Agregar Participante</button>
+                        <button class="text-center secondary-button1" type="submit">Guardar Accidente</button>
                      </div>
                       </div>
                       
@@ -680,15 +687,15 @@
                 <h2 class="mb-0">Registro de Accidentes</h2>
                 <div class="input-group input-group-sm w-auto mb-3">
                   <input type="text" id="filtroAccidentes" class="form-control" placeholder="Buscar...">
-                  <button id="btnBuscarAccidente" class="btn btn-secondary btn-sm">Buscar</button>
-                  <button id="btnVolver" class="btn btn-outline-primary btn-sm d-none">Volver</button>
+                  <button id="btnBuscarAccidente" class="btn btn-success btn-sm">Buscar</button>
+                  <button id="btnVolver" class="btn btn-outline-primary tab-button btn-sm d-none">Volver</button>
                 </div>
                 
               </div>
               
               <table id="accidentesTable" class="">
                 <thead>
-                  <tr>
+                  <tr class="">
                     <th>Número Accidente</th>
                     <th>Nombre Apellido</th>
                     <th>DNI</th>
@@ -706,8 +713,9 @@
                 </thead>
                 <tbody></tbody>
               </table>
+              
         
-              <button class="btn btn-primary mt-2" id="btnExportAccidentes">Exportar Accidentes a Excel</button>
+              <button class="btn btn-success mt-2" id="btnExportAccidentes">Exportar Accidentes a Excel</button>
             </div>
           </div>
         </div>
