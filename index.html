@@ -1,12 +1,18 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="">
-    <link rel="icon" href="./logo.png" type="image/png">
-  
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="./logo.png" type="image/png" />
     <title>Juzgado Vial Zona Este</title>
+    <link rel="manifest" href="manifest.json" />
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('service-worker.js')
+          .then(() => console.log("Service Worker registrado"))
+          .catch(error => console.log("Error al registrar SW", error));
+      }
+    </script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -45,7 +51,7 @@
             white-space: nowrap;
         }
 
-        .login-container {
+        .container {
             background-color: #fff;
             padding: 30px;
             border-radius: 8px;
@@ -57,7 +63,7 @@
             z-index: 1; /* Para que quede por encima de la marca de agua */
         }
 
-        h2 {
+        h2, h3 {
             color: #000000b0;
             margin-bottom: 20px;
         }
@@ -135,7 +141,7 @@
 </head>
 <body>
 
-<div class="watermark">
+  <div class="watermark">
     <span>Juzgado Vial Zona</span>
     <span>Juzgado Vial Zona</span>
     <span>Juzgado Vial Zona</span>
@@ -148,66 +154,95 @@
     <span>Juzgado Vial Zona</span>
     <span>Juzgado Vial Zona</span>
     <span>Juzgado Vial Zona</span>
-</div>
+  </div>
 
-<div class="login-container" id="loginContainer">
-    <img src="./logo.png" alt="Logo del sistema">
+  <!-- Contenedor activación -->
+  <div class="container" id="activacionContainer">
+    <h3>Activación del sistema</h3>
+    <input type="password" id="claveActivacion" placeholder="Clave de instalación" />
+    <button onclick="activarSistema()">Activar</button>
+  </div>
+
+  <!-- Contenedor login, oculto inicialmente -->
+  <div class="container" id="loginContainer" style="display:none;">
+    <img src="./logo.png" alt="Logo del sistema" />
     <h2>Iniciar Sesión</h2>
     <div id="message"></div>
-    <input type="text" id="username" placeholder="Usuario" required>
-    <input type="password" id="password" placeholder="Contraseña" required>
+    <input type="text" id="username" placeholder="Usuario" required />
+    <input type="password" id="password" placeholder="Contraseña" required />
     <button class="bot" onclick="login()">INGRESAR</button>
-    
-   
-</div>
+  </div>
 
-<!-- Círculo de carga -->
-<div class="spinner" id="spinner"></div>
+  <!-- Círculo de carga -->
+  <div class="spinner" id="spinner"></div>
 
-<script>
+  <script>
+    const CLAVE_MAESTRA = "maipu2024";
+
+    function activarSistema() {
+      const claveIngresada = document.getElementById("claveActivacion").value;
+      if (claveIngresada === CLAVE_MAESTRA) {
+        localStorage.setItem("sistemaActivado", "true");
+        mostrarLogin();
+      } else {
+        alert("Clave incorrecta. Contacte al administrador.");
+      }
+    }
+
+    function mostrarLogin() {
+      document.getElementById("activacionContainer").style.display = "none";
+      document.getElementById("loginContainer").style.display = "block";
+    }
+
+    window.onload = () => {
+      if (localStorage.getItem("sistemaActivado") === "true") {
+        mostrarLogin();
+      }
+    };
+
     const validCredentials = [
-        { username: "Ivanjuz", password: "muni2024" },
-        { username: "Natijuz", password: "2024" }
+      { username: "Ivanjuz", password: "muni2024" },
+      { username: "Natijuz", password: "2024" }
     ];
 
     function login() {
-        const usernameField = document.getElementById("username");
-        const passwordField = document.getElementById("password");
-        const username = usernameField.value;
-        const password = passwordField.value;
-        const message = document.getElementById("message");
-        const spinner = document.getElementById("spinner");
-        const loginContainer = document.getElementById("loginContainer");
+      const usernameField = document.getElementById("username");
+      const passwordField = document.getElementById("password");
+      const username = usernameField.value;
+      const password = passwordField.value;
+      const message = document.getElementById("message");
+      const spinner = document.getElementById("spinner");
+      const loginContainer = document.getElementById("loginContainer");
 
-        message.innerText = "";
-        message.className = "";
+      message.innerText = "";
+      message.className = "";
 
-        if (username === "" || password === "") {
-            message.innerText = "Ambos campos son obligatorios";
-            message.className = "error";
-            return;
-        }
+      if (username === "" || password === "") {
+        message.innerText = "Ambos campos son obligatorios";
+        message.className = "error";
+        return;
+      }
 
-        usernameField.value = "";
-        passwordField.value = "";
+      usernameField.value = "";
+      passwordField.value = "";
 
-        const isValidUser = validCredentials.some(
-            (cred) => cred.username === username && cred.password === password
-        );
+      const isValidUser = validCredentials.some(
+        (cred) => cred.username === username && cred.password === password
+      );
 
-        if (isValidUser) {
-            spinner.style.display = "block";
-            loginContainer.style.display = "none";
+      if (isValidUser) {
+        spinner.style.display = "block";
+        loginContainer.style.display = "none";
 
-            setTimeout(() => {
-                window.location.href = "./juzgado.html";
-            }, 1000);
-        } else {
-            message.innerText = "Usuario o contraseña incorrectos";
-            message.className = "error";
-        }
+        setTimeout(() => {
+          window.location.href = "./juzgado.html";
+        }, 1000);
+      } else {
+        message.innerText = "Usuario o contraseña incorrectos";
+        message.className = "error";
+      }
     }
-</script>
+  </script>
 
 </body>
 </html>

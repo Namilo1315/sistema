@@ -1,19 +1,17 @@
-<html><head>
-
+<!DOCTYPE html>
+<html lang="es">
+<head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <meta charset="UTF-8">
-    <title>Notificaciones Juzgado</title>
-    <link rel="icon" href="logo.png" type="image/png">
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <title>Notificaciones Juzgado</title>
+  <link rel="icon" href="logo.png" type="image/png">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -24,196 +22,163 @@
     h1 {
       color: #333;
       margin-bottom: 20px;
+      font-size: 22px;
     }
-    #mensajes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 30px;
-  justify-content: center; /* centra horizontalmente los elementos */
-  align-items: center;     /* centra verticalmente si los elementos tienen diferente altura */
-  text-align: center;      /* para que el texto dentro de los elementos se centre también */
-}
 
+    #mensajes {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 20px;
+    }
 
     .mensaje {
       background: #fff;
       border: 1px solid #ccc;
-      border-radius: 12px;
-      padding: 16px 16px 50px 16px; /* espacio abajo para botón copiar */
-      box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
-      max-width: 300px;
-      flex: 1 1 auto;
-      white-space: pre-wrap;
+      border-radius: 10px;
+      padding: 14px 14px 40px 14px;
+      box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+      font-size: 13px;
+      line-height: 1.3;
       position: relative;
-      font-size: 16px;
-      line-height: 1.1;
     }
 
     .mensaje strong {
-      color: #2c3e50;
+      color: #0040ff;
     }
 
     .btn-copiar {
       position: absolute;
-      bottom: 10px;
+      bottom: 8px;
       left: 50%;
       transform: translateX(-50%);
       background-color: #007bff;
       color: white;
       border: none;
-      border-radius: 6px;
-      padding: 8px 16px;
+      border-radius: 5px;
+      padding: 6px 10px;
       cursor: pointer;
-      font-weight: bold;
-      font-size: 14px;
-      transition: background-color 0.3s;
+      font-size: 12px;
     }
+/* Botón de eliminar más pequeño y centrado */
+.btn-eliminar {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 14px;
+  height: 14px;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+}
 
-    .btn-copiar:hover {
-      background-color: #0056b3;
-    }
 
-    .btn-eliminar {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      background: #e74c3c;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 24px;
-      height: 24px;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 18px;
-      line-height: 24px;
-      padding: 0;
-      transition: background-color 0.3s;
-    }
-
-    .btn-eliminar:hover {
-      background: #c0392b;
-    }
-    html{
-      transform: scale(0.9);
-      transform-origin: center center;
-    }
-    
   </style>
 </head>
 <body>
-
-<h1 class="text-center">Mensajes generados para WhatsApp</h1>
-<div class="" id="mensajes">Cargando mensajes...</div>
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <a href="juzgado.html" class="btn btn-outline-primary btn-sm">Volver</a>
+    <h1 class="text-center flex-grow-1 mb-0">Mensajes generados para WhatsApp</h1>
+  </div>
+  <div class="text-center" id="mensajes">Cargando mensajes...</div>
+  
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-  import {
-    getFirestore,
-    collection,
-    getDocs,
-    query,
-    where,
-    doc,
-    updateDoc
-  } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+import {
+  getFirestore, collection, getDocs, query, where, doc, updateDoc
+} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCLhhSoQ9gljKTPvWVZVGI3G8dU9dmi53Y",
-    authDomain: "mi-juzgado-447a4.firebaseapp.com",
-    projectId: "mi-juzgado-447a4",
-    storageBucket: "mi-juzgado-447a4.appspot.com",
-    messagingSenderId: "276360645206",
-    appId: "1:276360645206:web:e6c016d29d98add7bec9f7"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyCLhhSoQ9gljKTPvWVZVGI3G8dU9dmi53Y",
+  authDomain: "mi-juzgado-447a4.firebaseapp.com",
+  projectId: "mi-juzgado-447a4",
+  storageBucket: "mi-juzgado-447a4.appspot.com",
+  messagingSenderId: "276360645206",
+  appId: "1:276360645206:web:e6c016d29d98add7bec9f7"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const contenedorMensajes = document.getElementById("mensajes");
 
-  const contenedorMensajes = document.getElementById("mensajes");
+async function generarMensajes() {
+  const accidentesRef = collection(db, "accidentes");
+  let q = query(accidentesRef, where("notificado", "==", false));
+  let snapshot = await getDocs(q);
+  if (snapshot.empty) snapshot = await getDocs(accidentesRef);
 
-  async function generarMensajes() {
-    const accidentesRef = collection(db, "accidentes");
+  const mensajes = [];
 
-    // Intentar con filtro notificado == false
-    let q = query(accidentesRef, where("notificado", "==", false));
-    let snapshot = await getDocs(q);
-
-    if (snapshot.empty) {
-      // Si no hay, traer todos
-      snapshot = await getDocs(accidentesRef);
+  snapshot.forEach(docSnap => {
+    const data = docSnap.data();
+    if (data.notificado !== true) {
+      const idDoc = docSnap.id;
+      const numero = data.numero || "Sin número";
+      const fecha = data.fechaAudiencia || "Sin fecha";
+      const hora = data.horaAudiencia || "Sin hora";
+      const juzgado = data.juzgado || "Sin juzgado";
+      const nombre = data.nombre || "Sin nombre";
+      mensajes.push({ texto: crearMensaje(nombre, numero, fecha, hora, juzgado), id: idDoc });
+      (data.participantes || []).forEach(part => {
+        mensajes.push({ texto: crearMensaje(part.nombre || "Sin nombre", numero, fecha, hora, juzgado), id: idDoc });
+      });
     }
+  });
 
-    const mensajes = [];
+  contenedorMensajes.innerHTML = "";
+  mensajes.forEach(({ texto, id }) => {
+    const div = document.createElement("div");
+    div.className = "mensaje";
+    div.innerHTML = texto;
 
-    snapshot.forEach(docSnap => {
-      const data = docSnap.data();
-
-      if (data.notificado !== true) {
-        const idDoc = docSnap.id;
-        const numero = data.numero || "Sin número";
-        const fechaAudiencia = data.fechaAudiencia || "Sin fecha";
-        const horaAudiencia = data.horaAudiencia || "Sin hora";
-        const juzgado = data.juzgado || "Sin juzgado";
-        const nombrePrincipal = data.nombre || "Sin nombre";
-        const participantes = data.participantes || [];
-
-        mensajes.push({ texto: crearMensaje(nombrePrincipal, numero, fechaAudiencia, horaAudiencia, juzgado), id: idDoc });
-
-        participantes.forEach(part => {
-          const nombreParticipante = part.nombre || "Sin nombre";
-          mensajes.push({ texto: crearMensaje(nombreParticipante, numero, fechaAudiencia, horaAudiencia, juzgado), id: idDoc });
-        });
+    const btnEliminar = document.createElement("button");
+    btnEliminar.className = "btn-eliminar";
+    btnEliminar.textContent = "×";
+    btnEliminar.onclick = async () => {
+      try {
+        await updateDoc(doc(db, "accidentes", id), { notificado: true });
+        div.remove();
+      } catch (e) {
+        alert("Error: " + e.message);
       }
-    });
+    };
+    div.appendChild(btnEliminar);
 
-    contenedorMensajes.innerHTML = "";
-    mensajes.forEach(({ texto, id }) => {
-      const div = document.createElement("div");
-      div.className = "mensaje";
-      div.innerHTML = texto;
+    const btnCopiar = document.createElement("button");
+    btnCopiar.className = "btn-copiar";
+    btnCopiar.textContent = "Copiar";
+    btnCopiar.onclick = () => {
+      const textoPlano = div.textContent.replace("×Copiar", "").trim();
+      navigator.clipboard.writeText(textoPlano);
+      alert("Mensaje copiado");
+    };
+    div.appendChild(btnCopiar);
 
-      const btnEliminar = document.createElement("button");
-      btnEliminar.className = "btn-eliminar";
-      btnEliminar.textContent = "×";
-      btnEliminar.title = "Marcar como notificado y eliminar mensaje";
-      btnEliminar.onclick = async () => {
-        try {
-          await updateDoc(doc(db, "accidentes", id), { notificado: true });
-          div.remove();
-        } catch (e) {
-          alert("Error al actualizar el estado: " + e.message);
-        }
-      };
-      div.appendChild(btnEliminar);
+    contenedorMensajes.appendChild(div);
+  });
+}
 
-      const btnCopiar = document.createElement("button");
-      btnCopiar.className = "btn-copiar";
-      btnCopiar.textContent = "Copiar";
-      btnCopiar.onclick = () => {
-        const textoPlano = div.textContent.replace("×Copiar", "").trim();
-        navigator.clipboard.writeText(textoPlano);
-        alert("Mensaje copiado al portapapeles");
-      };
-      div.appendChild(btnCopiar);
+function crearMensaje(nombre, numero, fecha, hora) {
+  return `
+<strong>*Juzgado de Tránsito Zona Este de la Municipalidad de Maipú*</strong> por Accidente Nº <strong>*${numero}*</strong> caratulado <strong>*${nombre}*</strong> informa:
+<br><br>
+Se notifica que debe concurrir personalmente a la audiencia el día <strong>*${fecha}*</strong> a las <strong>*${hora}*</strong> hs, en el <strong>*Juzgado de Tránsito Zona Este*</strong>, ubicado en Ruta Provincial 50 Nº 4359 de Rodeo del Medio, Maipú. Podrá traer testigos, quienes deberán asistir con DNI. Asimismo, deberá concurrir con DNI y documentación del rodado involucrado.
+<br><br>
+En caso de no poder asistir, un familiar o representante legal podrá presentarse con certificado médico para reprogramar la audiencia, según lo establecido en los Arts. 109 y 113 de la Ley de Tránsito.
+<br><br>
+<strong>*Notificado: 261*</strong>
+  `;
+} 
 
-      contenedorMensajes.appendChild(div);
-    });
-  }
 
-  function crearMensaje(nombre, numero, fecha, hora, juzgado) {
-    return `
-Hola <strong>${nombre}</strong>! 👋
-
-Te recordamos que tenés una audiencia por el accidente Nº <strong>${numero}</strong>, el día <strong>${fecha}</strong> a las <strong>${hora}</strong> hs, en el <strong>${juzgado}</strong>.
-
-📌 Por favor, presentate puntual.
-
-Gracias!
-    `;
-  }
-
-  generarMensajes();
+generarMensajes();
 </script>
 
 </body>
