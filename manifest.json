@@ -1,6 +1,6 @@
 
 {
-    "name": "NL",
+    "name": "NL Sistema",
     "short_name": "Juzgado Vial",
     "start_url": "index.html",
     "display": "standalone",
@@ -10,12 +10,12 @@
       {
         "src": "logo.jpeg",
         "sizes": "192x192",
-        "type": "image/png"
+        "type": "image/jpeg"
       },
       {
         "src": "logo.jpeg",
         "sizes": "512x512",
-        "type": "image/png"
+        "type": "image/jpeg"
       }
     ]
   }

@@ -593,74 +593,102 @@ th {
                             <input type="date" id="fechaAccidente" required>
                         </div>
                         <div class="form-group">
-                          <label>Hora de la Audiencia:</label>
-                          <input type="time" id="horaAudiencia" required>
-                        </div>
+                          <label>Dominio:</label>
+                          <input type="text" id="dominioAccidente" required>
+                      </div>
+                        
                         <div class="form-group">
                             <label>Lugar del Hecho:</label>
                             <input type="text" id="lugarAccidente" required>
                         </div>
+                        
                     </div>
     
                     <div class="form-row">
+                      <div class="form-group">
+                        <label>Fecha de Audiencia:</label>
+                        <input type="date" id="fechaAudiencia" required>
+                    </div>
                         <div class="form-group">
-                            <label>Dominio:</label>
-                            <input type="text" id="dominioAccidente" required>
+                          <label>Hora de la Audiencia:</label>
+                          <input type="time" id="horaAudiencia" required>
                         </div>
                         <div class="form-group">
-                            <label>Fecha de Audiencia:</label>
-                            <input type="date" id="fechaAudiencia" required>
-                        </div>
+                          <label>Asignada a:</label>
+                          <select id="asignadaA">
+                              <option>Ivan</option>
+                              <option>Hugo</option>
+                              <option>Daniel</option>
+                              <option>Marcela</option>
+                              <option>Gabriela</option>
+                              <option></option>
+                          </select>
+                      </div>
                     </div>
     
                     <div class="form-row">
-                        <div class="form-group">
-                            <label>Asignada a:</label>
-                            <select id="asignadaA">
-                                <option>Ivan</option>
-                                <option>Hugo</option>
-                                <option>Patricia</option>
-                                <option>Daniel</option>
-                                <option>Carolina</option>
-                                <option>Gabriela</option>
-                                <option>Otro</option>
-                            </select>
-                        </div>
+                        
                         <div class="form-group">
                             <label>Tipo de Accidente:</label>
                             <select id="tipoAccidente">
                                 <option>Comun</option>
                                 <option>Emplace</option>
                                 <option>Archivo</option>
-                                <option>Otro</option>
+                                <option>Clausura</option>
                             </select>
                         </div>
+                        <div class="form-group">
+                          <label>Estado del Accidente:</label>
+                          <select id="estadoAccidente">
+                            <option>Finalizado</option>
+                            <option>En proceso</option>
+                            <option>Informe</option>
+                            <option>Pre-correo</option>
+                            <option>Para la Firma</option>
+                            <option>Requerimiento</option>
+                            <option>Esperando Cedula</option>
+                            <option>Esperando Apremio</option>
+                            <option>Apremio</option>
+                            <option>Pagado</option>
+                            <option>Plan de Pago</option>
+                            <option>Archivo</option>
+                            <option>Extranjero</option>
+                            <option>Clausura</option>
+                            <option>Archivo</option>
+                            <option>Apelado</option>
+                            <option>Infodata</option>
+                          </select>
+                      </div>
+                      <div class="form-group">
+                        <label>Alcohol:</label>
+                        <select id="alcohol">
+                            <option>NO</option>
+                            <option>SI</option>
+                            
+                        </select>
+                    </div>
+
+                      <div class="form-group">
+                        <label>Firmado por:</label>
+                        <select id="firma">
+                            <option>Hugo</option>
+                            <option>Carolina</option>
+                            <option>Patricia</option>
+                        </select>
+                    </div>
                     </div>
     
                     <div class="form-row">
-                        <div class="form-group">
-                            <label>Estado del Accidente:</label>
-                            <select id="estadoAccidente">
-                                <option>Esperando Audiencia</option>
-                                <option>Esperando Cedula</option>
-                                <option>Apremio</option>
-                                <option>Pagado</option>
-                                <option>Finalizado</option>
-                                <option>Remitido</option>
-                            </select>
-                        </div>
+                      <div class="form-group">
+                        <label>Valor de la Multa:</label>
+                        <input type="number" id="valorMultaAccidente" required>
+                    </div>
+
                         <div class="form-group">
                             <label>Fallo (PDF):</label>
                             <input type="file" id="falloPdf" accept=".pdf">
                         </div>
-                    </div>
-                   
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Valor de la Multa:</label>
-                            <input type="number" id="valorMultaAccidente" required>
-                        </div>
+                        
                     </div>
     
                     <div class="form-group">
@@ -679,10 +707,12 @@ th {
                 </form>
             </div>
          </div>
-         <div class="container-fluid">
+         </div>
+         
+         <div class="container-fluid" style="height: 98vh; overflow-y: auto;">
           <div class="row justify-content-center">
-            <div class="col-12 col-md-10 col-lg-8 table-container">
-              
+            <div class="col-12 col-md-10 col-lg-8 table-container" style="max-height: 95vh; overflow-y: auto;">
+        
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <h2 class="mb-0">Registro de Accidentes</h2>
                 <div class="input-group input-group-sm w-auto mb-3">
@@ -690,35 +720,37 @@ th {
                   <button id="btnBuscarAccidente" class="btn btn-success btn-sm">Buscar</button>
                   <button id="btnVolver" class="btn btn-outline-primary tab-button btn-sm d-none">Volver</button>
                 </div>
-                
               </div>
-              
-              <table id="accidentesTable" class="">
-                <thead>
-                  <tr class="">
-                    <th>Número Accidente</th>
-                    <th>Nombre Apellido</th>
-                    <th>DNI</th>
-                    <th>Fecha</th>
-                    <th>Lugar</th>
-                    <th>Dominio</th>
-                    <th>Fecha Audiencia</th>
-                    <th>Asignada</th>
-                    <th>Tipo</th>
-                    <th>Estado</th>
-                    <th>Valor Multa</th>
-                    <th>Fallo</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
-              
+        
+              <div style="overflow-y: auto; max-height: 75vh; ">
+                <table id="accidentesTable" class="">
+                  <thead class="">
+                    <tr>
+                      <th style="position: sticky; top: 0; z-index: 1;">Número Accidente</th>
+                      <th style="position: sticky; top: 0; z-index: 1;">Nombre Apellido</th>
+                      <th style="position: sticky; top: 0; z-index: 1;">DNI</th>
+                      <th style="position: sticky; top: 0; z-index: 1;">Fecha</th>
+                      <th style="position: sticky; top: 0; z-index: 1;">Lugar</th>
+                      <th style="position: sticky; top: 0; z-index: 1;">Dominio</th>
+                      <th style="position: sticky; top: 0; z-index: 1;">Fecha Audiencia</th>
+                      <th style="position: sticky; top: 0; z-index: 1;">Asignada</th>
+                      <th style="position: sticky; top: 0; z-index: 1;">Tipo</th>
+                      <th style="position: sticky; top: 0; z-index: 1;">Estado</th>
+                      <th style="position: sticky; top: 0; z-index: 1;">Valor Multa</th>
+                      <th style="position: sticky; top: 0; z-index: 1;">Fallo</th>
+                      <th style="position: sticky; top: 0; z-index: 1;">Acciones</th>
+                    </tr>
+                    
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
         
               <button class="btn btn-success mt-2" id="btnExportAccidentes">Exportar Accidentes a Excel</button>
             </div>
           </div>
         </div>
+        
         
            
         <!-- Alerta visual -->
@@ -791,7 +823,7 @@ th {
   .cerrar-btn:hover {
     color: #0077cc;
   }
-     
+       
  </style>   
 
 
@@ -878,6 +910,8 @@ export function editarRegistro(type, id) {
     document.getElementById("asignadaA").value = data.asignada || "";
     document.getElementById("tipoAccidente").value = data.tipo || "";
     document.getElementById("estadoAccidente").value = data.estado || "";
+    document.getElementById("firma").value = data.firma|| "";
+    document.getElementById("alcohol").value = data.alcohol|| "";
     document.getElementById("valorMultaAccidente").value = data.valorMulta || 0;
 
     const container = document.getElementById("participantesContainer");
@@ -934,6 +968,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
 
 
 export function updateTable(type) {
@@ -1111,11 +1146,11 @@ const resultadosActas = actas.filter(a =>
           `${p.nombre} (DNI: ${p.dni}, Dominio: ${p.dominio})`
         ).join(", ");
       }
-      html += `<p><strong>Accidente:</strong> ${acc.numero} - ${acc.nombre} - ${acc.dni}<br>
-                Estado: ${acc.estado} - Dominio: ${acc.dominio}<br>
+      html += `<p><strong>Accidente: ${acc.numero} - ${acc.nombre} -  ${acc.dni}<br></strong>
+                Estado: <strong>${acc.estado}</strong> - Dominio: ${acc.dominio}<br>
                 Resolvio: ${acc.asignada} - Audiencia:${acc.fecha} - Hora:${acc.horaAudiencia}<br>
-                Valor Multa: $${acc.valorMulta || 0}
-                <button class="pay-button">Pagar</button>${participantesText}</p>`;
+                Firma: ${acc.firma} - <span style="color:red;">Alcohol: ${acc.alcohol}</span> - Valor Multa: $${acc.valorMulta || 0}
+                <button class="pay-button">Pagar</button><strong>${participantesText}</p></strong>`;
     });
   }
 
@@ -1171,6 +1206,8 @@ document.getElementById("accidenteForm").addEventListener("submit", async e => {
         asignada: document.getElementById("asignadaA").value,
         tipo: document.getElementById("tipoAccidente").value,
         estado: document.getElementById("estadoAccidente").value,
+        firma: document.getElementById("firma").value,
+        alcohol: document.getElementById("alcohol").value, 
         valorMulta: Number(document.getElementById("valorMultaAccidente").value),
         fallo: pdfUrl,
         participantes: participantes
@@ -1194,6 +1231,8 @@ document.getElementById("accidenteForm").addEventListener("submit", async e => {
       asignada: document.getElementById("asignadaA").value,
       tipo: document.getElementById("tipoAccidente").value,
       estado: document.getElementById("estadoAccidente").value,
+      firma: document.getElementById("firma").value,
+      alcohol: document.getElementById("alcohol").value,
       valorMulta: Number(document.getElementById("valorMultaAccidente").value),
       fallo: "",
       participantes: participantes
