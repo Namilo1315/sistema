@@ -5,15 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" href="./logo.png" type="image/png" />
     <title>Juzgado Vial</title>
-    <link rel="manifest" href="manifest.json" />
+
+    <!-- Manifest -->
+    <link rel="manifest" href="./manifest.json" />
+
+    <!-- Registrar Service Worker -->
     <script>
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('service-worker.js')
-          .then(() => console.log("Service Worker registrado"))
-          .catch(error => console.log("Error al registrar SW", error));
+        navigator.serviceWorker.register('./service-worker.js')
+          .then(() => console.log("✅ Service Worker registrado"))
+          .catch(error => console.log("❌ Error al registrar SW", error));
       }
     </script>
+
     <style>
+        /* --- Mantengo tus estilos --- */
         body {
             font-family: Arial, sans-serif;
             background-color: #f7f7f7;
@@ -25,20 +31,13 @@
             position: relative;
             overflow: hidden;
         }
-
-        /* Fondo de marca de agua */
         .watermark {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            opacity: 0.08;
-            font-size: 3rem;
-            font-weight: 500;
-            color:  #004cff;
-            transform: rotate(-20deg);
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0; opacity: 0.08;
+            font-size: 3rem; font-weight: 500;
+            color: #004cff; transform: rotate(-20deg);
             pointer-events: none;
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -46,11 +45,6 @@
             justify-items: center;
             align-items: center;
         }
-
-        .watermark span {
-            white-space: nowrap;
-        }
-
         .container {
             background-color: #fff;
             padding: 30px;
@@ -60,110 +54,50 @@
             text-align: center;
             font-size: 18px;
             position: relative;
-            z-index: 1; /* Para que quede por encima de la marca de agua */
+            z-index: 1;
         }
-
-        h2, h3 {
-            color: #000000b0;
-            margin-bottom: 20px;
-        }
-
-        img {
-            width: 80px;
-        }
-
+        h2, h3 { color: #000000b0; margin-bottom: 20px; }
+        img { width: 80px; }
         input {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
+            width: 100%; padding: 12px; margin: 10px 0;
+            border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;
         }
-
         button {
-            width: 100%;
-            padding: 12px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 10px;
+            width: 100%; padding: 12px;
+            background-color: #007bff; color: white;
+            border: none; border-radius: 4px; cursor: pointer; margin-top: 10px;
         }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        .error {
-            color: red;
-            margin-bottom: 8px;
-            font-size: 16px;
-            font-weight: 500;
-        }
-
+        button:hover { background-color: #0056b3; }
+        .error { color: red; margin-bottom: 8px; font-size: 16px; font-weight: 500; }
         .spinner {
-            display: none;
-            margin: 20px auto;
-            border: 8px solid #f3f3f3;
-            border-radius: 50%;
-            border-top: 8px solid #3498db;
-            width: 50px;
-            height: 50px;
+            display: none; margin: 20px auto;
+            border: 8px solid #f3f3f3; border-radius: 50%;
+            border-top: 8px solid #3498db; width: 50px; height: 50px;
             animation: spin 1s linear infinite;
         }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .bot {
-            font-size: 16px;
-            font-weight: 500;
-        }
-
-        a {
-            text-decoration: none;
-        }
-
-        p {
-            font-size: 15px;
-            margin-top: 10px;
-            color: #000000d0;
-        }
-
-        p:hover {
-            color: blue;
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .bot { font-size: 16px; font-weight: 500; }
+        a { text-decoration: none; }
+        p { font-size: 15px; margin-top: 10px; color: #000000d0; }
+        p:hover { color: blue; }
     </style>
 </head>
 <body>
 
   <div class="watermark">
-    <span>Juzgado Vial Zona</span>
-    <span>Juzgado Vial Zona</span>
-    <span>Juzgado Vial Zona</span>
-    <span>Juzgado Vial Zona</span>
-    <span>Juzgado Vial Zona</span>
-    <span>Juzgado Vial Zona</span>
-    <span>Juzgado Vial Zona</span>
-    <span>Juzgado Vial Zona</span>
-    <span>Juzgado Vial Zona</span>
-    <span>Juzgado Vial Zona</span>
-    <span>Juzgado Vial Zona</span>
-    <span>Juzgado Vial Zona</span>
+    <span>Juzgado Vial Zona</span><span>Juzgado Vial Zona</span><span>Juzgado Vial Zona</span><span>Juzgado Vial Zona</span>
+    <span>Juzgado Vial Zona</span><span>Juzgado Vial Zona</span><span>Juzgado Vial Zona</span><span>Juzgado Vial Zona</span>
+    <span>Juzgado Vial Zona</span><span>Juzgado Vial Zona</span><span>Juzgado Vial Zona</span><span>Juzgado Vial Zona</span>
   </div>
 
-  <!-- Contenedor activación -->
+  <!-- Activación -->
   <div class="container" id="activacionContainer">
     <h3>Activación del sistema</h3>
     <input type="password" id="claveActivacion" placeholder="Clave de instalación" />
     <button onclick="activarSistema()">Activar</button>
   </div>
 
-  <!-- Contenedor login, oculto inicialmente -->
+  <!-- Login -->
   <div class="container" id="loginContainer" style="display:none;">
     <img src="./logo.png" alt="Logo del sistema" />
     <h2>Iniciar Sesión</h2>
@@ -173,11 +107,10 @@
     <button class="bot" onclick="login()">INGRESAR</button>
   </div>
 
-  <!-- Círculo de carga -->
   <div class="spinner" id="spinner"></div>
 
   <script>
-    const CLAVE_MAESTRA = "maipu2024";
+    const CLAVE_MAESTRA = "maipu2025";
 
     function activarSistema() {
       const claveIngresada = document.getElementById("claveActivacion").value;
@@ -202,7 +135,7 @@
 
     const validCredentials = [
       { username: "Ivanjuz", password: "muni2024" },
-      { username: "Natijuz", password: "2024" }
+      { username: "Nati", password: "2025" }
     ];
 
     function login() {
