@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Métricas de Accidentes</title>
+<link rel="icon" href="logo.png" type="image/png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background: #f9f9f9;
+  }
+  /* HEADER */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  header h1 {
+    font-size: 22px;
+    margin: 0;
+    text-align: center;
+    flex: 1;
+  }
+  .btn {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    color: white;
+  }
+  .btn-volver {
+    background: #2196F3;
+  }
+  .btn-volver:hover {
+    background: #1976D2;
+  }
+  .btn-pdf {
+    background:  #388E3C;
+  }
+  .btn-pdf:hover {
+    background:#4CAF50; 
+  }
+  /* GRÁFICOS */
+  .chart-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+    max-width: 1100px;
+    margin: auto;
+    margin-top: 50px;
+  }
+  .chart-box {
+    background: #fff;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    height: 280px;
+  }
+  canvas {
+    max-height: 240px !important;
+  }
+  .chart-row {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    margin-top: 25px;
+    max-width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .chart-row .chart-box {
+    flex: 1;
+    min-width: 300px;
+    max-width: 340px;
+  }
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    header {
+      flex-direction: column;
+      align-items: stretch;
+      text-align: center;
+    }
+    header h1 {
+      font-size: 18px;
+    }
+    .btn {
+      padding: 6px 10px;
+      font-size: 13px;
+    }
+    .chart-container {
+      grid-template-columns: 1fr;
+    }
+    .chart-row {
+      flex-direction: column;
+      align-items: center;
+    }
+    .chart-row .chart-box {
+      max-width: 100%;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>
+ <a href="juzgado.html"> <button class="btn btn-volver">⬅ Volver</button> </a>
+  <h1>📊 Análisis de Accidentes - Juzgado Vial</h1>
+  <button class="btn btn-pdf" id="btnPDF">📄 Descargar en PDF</button>
+</header>
+
+<div id="analisis">
+  <div class="chart-container">
+    <div class="chart-box"><canvas id="graficoTipo"></canvas></div>
+    <div class="chart-box"><canvas id="graficoEstado"></canvas></div>
+    <div class="chart-box"><canvas id="graficoAsignada"></canvas></div>
+  </div>
+
+  <div class="chart-row">
+   
+    <div class="chart-box"><canvas id="graficoAlcohol"></canvas></div>
+    <div class="chart-box"><canvas id="graficoFirmado"></canvas></div>
+  </div>
+</div>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+  
+  // Configuración Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyCLhhSoQ9gljKTPvWVZVGI3G8dU9dmi53Y",
+    authDomain: "mi-juzgado-447a4.firebaseapp.com",
+    projectId: "mi-juzgado-447a4",
+    storageBucket: "mi-juzgado-447a4.appspot.com",
+    messagingSenderId: "276360645206",
+    appId: "1:276360645206:web:e6c016d29d98add7bec9f7"
+  };
+  
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  
+  const colores = [
+    "#FF6F00", // naranja vibrante
+    "#2E7D32", // verde fresco
+    "#0288D1", // celeste brillante
+    "#FFA726", // naranja claro
+    "#66BB6A", // verde claro
+    "#03A9F4"  // celeste claro
+  ];
+  
+  // Función para generar gráficos
+  async function generarGraficos() {
+    const snap = await getDocs(collection(db, "accidentes"));
+    const accidentes = snap.docs.map(d => d.data());
+  
+    const contar = campo => {
+      const conteo = {};
+      accidentes.forEach(a => {
+        const valor = a[campo] || "Sin datos";
+        conteo[valor] = (conteo[valor] || 0) + 1;
+      });
+      return conteo;
+    };
+  
+    crearGrafico("graficoTipo", contar("tipo"), "Tipo de Accidente");
+    crearGrafico("graficoEstado", contar("estado"), "Estado del Accidente");
+    crearGrafico("graficoAsignada", contar("asignada"), "Asignada a");
+    crearGrafico("graficoAlcohol", contar("alcohol"), "Alcohol");
+    crearGrafico("graficoFirmado", contar("firma"), "Firmado por");
+  }
+  
+  function crearGrafico(id, datos, titulo) {
+    new Chart(document.getElementById(id), {
+      type: "doughnut",  // cambio para que sea círculo tipo anillo
+      data: {
+        labels: Object.keys(datos),
+        datasets: [{
+          data: Object.values(datos),
+          backgroundColor: colores
+        }]
+      },
+      options: {
+        responsive: true,
+        animation: {
+          animateRotate: true,
+          animateScale: true
+        },
+        plugins: {
+          title: {
+            display: true,
+            text: titulo,
+            font: { size: 16 },
+            color: "#000000" // Título en negro
+          },
+          legend: { position: "bottom" },
+          tooltip: { enabled: true }
+        },
+        onClick: (evt, elements) => {
+          if (elements.length > 0) {
+            const index = elements[0].index;
+            alert(`📊 ${titulo}: ${Object.keys(datos)[index]} - ${Object.values(datos)[index]} registros`);
+          }
+        }
+      }
+    });
+  }
+  
+  // Función para exportar a PDF con título arriba y gráficos abajo
+  document.getElementById("btnPDF").addEventListener("click", async () => {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF("p", "mm", "a4");
+  
+    // Añadir título
+    pdf.setFontSize(20);
+    pdf.setTextColor("#000000"); // negro
+    pdf.text("Análisis de Accidentes Juzgado Vial Zona Este", pdf.internal.pageSize.getWidth() / 2, 20, { align: "center" });
+  
+    // Tomar el div con los gráficos
+    const analisis = document.getElementById("analisis");
+    const canvas = await html2canvas(analisis, { scale: 2, backgroundColor: "#fff" });
+    const imgData = canvas.toDataURL("image/png");
+  
+    const imgWidth = 190;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+  
+    // Insertar imagen debajo del título con espacio
+    pdf.addImage(imgData, "PNG", 10, 30, imgWidth, imgHeight);
+  
+    pdf.save("Analisis_Accidentes_Juzgado_Vial_Zona_Este.pdf");
+  });
+  
+  generarGraficos();
+  </script>
+  
+
+</body>
+</html>

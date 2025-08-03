@@ -558,14 +558,15 @@ th {
             <h2>Buscar Accidente</h2>
             <div class="form-group">
               <input type="text" id="searchInput" placeholder="Ingrese DNI, Dominio, N° Accidente">
-              <button onclick="buscarRegistros()">Buscar</button>
+              <button class="bg-success" onclick="buscarRegistros()">Buscar</button>
             </div>
             <div id="searchResults"></div>
           </div>
     
           <div class="tabs">
             <button class="tab-button active">Accidentes Viales</button>
-            <a href="notificaciones.html" target="_blank" class="tab-button">Generar Notificaciones</a>
+            <a href="notificaciones.html" class="tab-button">Generar Notificaciones</a>
+            <a href="analisis.html" class="tab-button bg-success">Análisis</a>
           </div>
           
           
@@ -711,9 +712,9 @@ th {
          </div>
          </div>
          
-         <div class="container-fluid" style="height: 98vh; overflow-y: auto;">
+         <div class="container-fluid" style="height: 98vh">
           <div class="row justify-content-center">
-            <div class="col-12 col-md-10 col-lg-8 table-container" style="max-height: 95vh; overflow-y: auto;">
+            <div class="col-12 col-md-10 col-lg-8 table-container" >
         
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <h2 class="mb-0">Registro de Accidentes</h2>

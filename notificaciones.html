@@ -14,16 +14,12 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f2f7fb;
-      padding: 20px;
-    }
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background: #f9f9f9;
+  }
 
-    h1 {
-      color: #333;
-      margin-bottom: 20px;
-      font-size: 22px;
-    }
+   
 
     #mensajes {
       display: grid;
@@ -59,35 +55,74 @@
       cursor: pointer;
       font-size: 12px;
     }
-/* Botón de eliminar más pequeño y centrado */
-.btn-eliminar {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  background: #e74c3c;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 14px;
-  height: 14px;
-  font-size: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  cursor: pointer;
-}
 
+    /* Botón de eliminar más pequeño y centrado */
+    .btn-eliminar {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      background: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 14px;
+      height: 14px;
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      cursor: pointer;
+    }
+    header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  header h1 {
+    font-size: 22px;
+    margin: 0;
+    text-align: center;
+    flex: 1;
+    font-weight: 600;
+  }
+  .btn {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    color: white;
+  }
+  .btn-volver {
+    background: #2196F3;
+  }
+  .btn-volver:hover {
+    background: #1976D2;
+    color: #ffffff;
+  }
+  .btn-pdf {
+    background:  #388E3C;
+  }
+  .btn-pdf:hover {
+    background:#4CAF50; 
+    color: #ffffff;
+  }
 
   </style>
 </head>
 <body>
-  <div class="d-flex align-items-center justify-content-between mb-3">
-    <a href="juzgado.html" class="btn btn-outline-primary btn-sm">Volver</a>
-    <h1 class="text-center flex-grow-1 mb-0">Notificaciones Audiencias</h1>
-  </div>
+
+  <header>
+    <a href="juzgado.html"> <button class="btn btn-volver">⬅ Volver</button> </a>
+     <h1>Notificaciones para Audiencias</h1>
+     <button class="btn btn-pdf" id="btnPDF">📄 Descargar en PDF</button>
+   </header>
+
   <div class="text-center" id="mensajes">Cargando mensajes...</div>
-  
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
@@ -108,13 +143,15 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const contenedorMensajes = document.getElementById("mensajes");
 
+let mensajesActuales = [];
+
 async function generarMensajes() {
   const accidentesRef = collection(db, "accidentes");
   let q = query(accidentesRef, where("notificado", "==", false));
   let snapshot = await getDocs(q);
   if (snapshot.empty) snapshot = await getDocs(accidentesRef);
 
-  const mensajes = [];
+  mensajesActuales = [];
 
   snapshot.forEach(docSnap => {
     const data = docSnap.data();
@@ -125,15 +162,24 @@ async function generarMensajes() {
       const hora = data.horaAudiencia || "Sin hora";
       const juzgado = data.juzgado || "Sin juzgado";
       const nombre = data.nombre || "Sin nombre";
-      mensajes.push({ texto: crearMensaje(nombre, numero, fecha, hora, juzgado), id: idDoc });
+
+      // Cada accidente + su notificación principal
+      mensajesActuales.push({ texto: crearMensaje(nombre, numero, fecha, hora, juzgado), id: idDoc });
+
+      // + las notificaciones para cada participante (si existen)
       (data.participantes || []).forEach(part => {
-        mensajes.push({ texto: crearMensaje(part.nombre || "Sin nombre", numero, fecha, hora, juzgado), id: idDoc });
+        mensajesActuales.push({ texto: crearMensaje(part.nombre || "Sin nombre", numero, fecha, hora, juzgado), id: idDoc });
       });
     }
   });
 
+  if (mensajesActuales.length === 0) {
+    contenedorMensajes.innerHTML = "<p>No hay notificaciones pendientes.</p>";
+    return;
+  }
+
   contenedorMensajes.innerHTML = "";
-  mensajes.forEach(({ texto, id }) => {
+  mensajesActuales.forEach(({ texto, id }) => {
     const div = document.createElement("div");
     div.className = "mensaje";
     div.innerHTML = texto;
@@ -165,7 +211,7 @@ async function generarMensajes() {
   });
 }
 
-function crearMensaje(nombre, numero, fecha, hora) {
+function crearMensaje(nombre, numero, fecha, hora, juzgado) {
   return `
 <strong>*Juzgado de Tránsito Zona Este de la Municipalidad de Maipú*</strong> por Accidente Nº <strong>*${numero}*</strong> caratulado <strong>*${nombre}*</strong> informa:
 <br><br>
@@ -175,8 +221,42 @@ En caso de no poder asistir, un familiar o representante legal podrá presentars
 <br><br>
 <strong>*Notificado: 261*</strong>
   `;
-} 
+}
 
+// Función para limpiar HTML y extraer texto plano
+function limpiarHTML(html) {
+  const temporal = document.createElement("div");
+  temporal.innerHTML = html;
+  return temporal.textContent || temporal.innerText || "";
+}
+
+document.getElementById("btnPDF").addEventListener("click", () => {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF("p", "mm", "a4");
+  const margin = 10;
+  const maxLineWidth = 190;
+
+  if (mensajesActuales.length === 0) {
+    alert("No hay mensajes para generar PDF.");
+    return;
+  }
+
+  mensajesActuales.forEach(({ texto }, index) => {
+    if (index > 0) pdf.addPage();
+
+    const text = limpiarHTML(texto).replace(/\*/g, ""); // Quitar asteriscos
+    pdf.setFontSize(16);
+    pdf.setTextColor(33,33,33);
+    pdf.text("Notificación de Audiencia", margin, 20);
+
+    pdf.setFontSize(12);
+    pdf.setTextColor(0,0,0);
+    const splitText = pdf.splitTextToSize(text, maxLineWidth);
+    pdf.text(splitText, margin, 30);
+  });
+
+  pdf.save("notificaciones_audiencias.pdf");
+});
 
 generarMensajes();
 </script>
