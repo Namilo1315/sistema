@@ -53,25 +53,25 @@
   .chart-container {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 25px;
+    gap: 35px;
     max-width: 1100px;
     margin: auto;
     margin-top: 50px;
   }
   .chart-box {
     background: #fff;
-    padding: 10px;
+    padding: 15px;
     border-radius: 10px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    height: 280px;
+    height: 300px;
   }
   canvas {
-    max-height: 240px !important;
+    max-height: 300px !important;
   }
   .chart-row {
     display: flex;
     justify-content: center;
-    gap: 25px;
+    gap: 35px;
     margin-top: 25px;
     max-width: 1100px;
     margin-left: auto;
@@ -125,11 +125,12 @@
   </div>
 
   <div class="chart-row">
-   
-    <div class="chart-box"><canvas id="graficoAlcohol"></canvas></div>
     <div class="chart-box"><canvas id="graficoFirmado"></canvas></div>
+    <div class="chart-box"><canvas id="graficoAlcohol"></canvas></div>
+    
   </div>
 </div>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
   import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
@@ -148,47 +149,92 @@
   const db = getFirestore(app);
   
   const colores = [
+  
     "#FF6F00", // naranja vibrante
-    "#2E7D32", // verde fresco
+    
     "#0288D1", // celeste brillante
-    "#FFA726", // naranja claro
+    "#2E7D32", // verde fresco
+    "#FFA950", // naranja claro
+    
     "#66BB6A", // verde claro
     "#03A9F4"  // celeste claro
   ];
+
+  // Variables globales para datos y filtros
+  let accidentes = [];
+  let filtroActivo = null; // { campo, valor }
+  let charts = {};
+  let colorPorEtiqueta = {};
   
-  // Función para generar gráficos
   async function generarGraficos() {
     const snap = await getDocs(collection(db, "accidentes"));
-    const accidentes = snap.docs.map(d => d.data());
-  
-    const contar = campo => {
-      const conteo = {};
-      accidentes.forEach(a => {
-        const valor = a[campo] || "Sin datos";
-        conteo[valor] = (conteo[valor] || 0) + 1;
-      });
-      return conteo;
-    };
-  
-    crearGrafico("graficoTipo", contar("tipo"), "Tipo de Accidente");
-    crearGrafico("graficoEstado", contar("estado"), "Estado del Accidente");
-    crearGrafico("graficoAsignada", contar("asignada"), "Asignada a");
-    crearGrafico("graficoAlcohol", contar("alcohol"), "Alcohol");
-    crearGrafico("graficoFirmado", contar("firma"), "Firmado por");
+    accidentes = snap.docs.map(d => d.data());
+
+    asignarColoresFijos();
+    actualizarGraficos();
   }
-  
-  function crearGrafico(id, datos, titulo) {
-    new Chart(document.getElementById(id), {
-      type: "doughnut",  // cambio para que sea círculo tipo anillo
+
+  // Asignar colores fijos por cada etiqueta para mantener siempre el mismo color
+  function asignarColoresFijos() {
+    let colorIndex = 0;
+    const campos = ["tipo", "estado", "asignada", "alcohol", "firma"];
+    campos.forEach(campo => {
+      const valoresUnicos = [...new Set(accidentes.map(a => a[campo] || "Sin datos"))];
+      valoresUnicos.forEach(valor => {
+        if (!colorPorEtiqueta[valor]) {
+          colorPorEtiqueta[valor] = colores[colorIndex % colores.length];
+          colorIndex++;
+        }
+      });
+    });
+  }
+
+  function actualizarGraficos() {
+    const datosFiltrados = aplicarFiltro();
+
+    charts["graficoTipo"] = crearGrafico("graficoTipo", contar(datosFiltrados, "tipo"), "Tipo de Accidente", "tipo");
+    charts["graficoEstado"] = crearGrafico("graficoEstado", contar(datosFiltrados, "estado"), "Estado del Accidente", "estado");
+    charts["graficoAsignada"] = crearGrafico("graficoAsignada", contar(datosFiltrados, "asignada"), "Asignada a", "asignada");
+    charts["graficoAlcohol"] = crearGrafico("graficoAlcohol", contar(datosFiltrados, "alcohol"), "Alcohol", "alcohol");
+    charts["graficoFirmado"] = crearGrafico("graficoFirmado", contar(datosFiltrados, "firma"), "Firmado por", "firma");
+  }
+
+  function aplicarFiltro() {
+    if (!filtroActivo) return accidentes;
+    return accidentes.filter(a => a[filtroActivo.campo] === filtroActivo.valor);
+  }
+
+  function contar(datos, campo) {
+    const conteo = {};
+    datos.forEach(a => {
+      const valor = a[campo] || "Sin datos";
+      conteo[valor] = (conteo[valor] || 0) + 1;
+    });
+    return conteo;
+  }
+
+  function crearGrafico(id, datos, titulo, campo) {
+    if (charts[id]) charts[id].destroy();
+
+    const ctx = document.getElementById(id);
+    const etiquetas = Object.keys(datos);
+    const valores = Object.values(datos);
+
+    // Generar colores fijos para cada etiqueta
+    const backgroundColors = etiquetas.map(label => colorPorEtiqueta[label] || "#CCCCCC");
+
+    const chart = new Chart(ctx, {
+      type: "doughnut",
       data: {
-        labels: Object.keys(datos),
+        labels: etiquetas,
         datasets: [{
-          data: Object.values(datos),
-          backgroundColor: colores
+          data: valores,
+          backgroundColor: backgroundColors
         }]
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false,
         animation: {
           animateRotate: true,
           animateScale: true
@@ -197,49 +243,64 @@
           title: {
             display: true,
             text: titulo,
-            font: { size: 16 },
-            color: "#000000" // Título en negro
+            font: { size: 23, weight: 'bold' },
+            color: "#000000",
+            padding: { top: 0, bottom: 20 }
           },
-          legend: { position: "bottom" },
+          legend: {
+            position: "bottom",
+            labels: {
+              boxWidth: 12,
+              boxHeight: 12,
+              padding: 8,
+              color: "#000000",
+              font: { size: 12.5, weight: 'bold' }
+            }
+          },
           tooltip: { enabled: true }
+        },
+        layout: {
+          padding: 15
         },
         onClick: (evt, elements) => {
           if (elements.length > 0) {
             const index = elements[0].index;
-            alert(`📊 ${titulo}: ${Object.keys(datos)[index]} - ${Object.values(datos)[index]} registros`);
+            const valor = etiquetas[index];
+            if (filtroActivo && filtroActivo.campo === campo && filtroActivo.valor === valor) {
+              filtroActivo = null; // Quitar filtro si ya está activo en esa porción
+            } else {
+              filtroActivo = { campo, valor }; // Aplicar nuevo filtro
+            }
+            actualizarGraficos();
           }
         }
       }
     });
+    return chart;
   }
-  
-  // Función para exportar a PDF con título arriba y gráficos abajo
+
+  // Exportar a PDF
   document.getElementById("btnPDF").addEventListener("click", async () => {
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF("p", "mm", "a4");
-  
-    // Añadir título
+
     pdf.setFontSize(20);
-    pdf.setTextColor("#000000"); // negro
+    pdf.setTextColor("#000000");
     pdf.text("Análisis de Accidentes Juzgado Vial Zona Este", pdf.internal.pageSize.getWidth() / 2, 20, { align: "center" });
-  
-    // Tomar el div con los gráficos
+
     const analisis = document.getElementById("analisis");
     const canvas = await html2canvas(analisis, { scale: 2, backgroundColor: "#fff" });
     const imgData = canvas.toDataURL("image/png");
-  
+
     const imgWidth = 190;
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
-  
-    // Insertar imagen debajo del título con espacio
+
     pdf.addImage(imgData, "PNG", 10, 30, imgWidth, imgHeight);
-  
     pdf.save("Analisis_Accidentes_Juzgado_Vial_Zona_Este.pdf");
   });
-  
+
   generarGraficos();
-  </script>
-  
+</script>
 
 </body>
 </html>
