@@ -1382,7 +1382,6 @@ document.getElementById('btnExportAccidentes').addEventListener('click', () => {
 
 // Inicializar al cargar DOM
 document.addEventListener("DOMContentLoaded", cargarDatos);
-
 // Mostrar alerta si hay audiencias HOY con robot bonito
 export async function verificarAudienciasHoy() {
   const hoy = new Date().toISOString().split("T")[0];
@@ -1395,7 +1394,8 @@ export async function verificarAudienciasHoy() {
     if (data.fechaAudiencia === hoy && data.asignada) {
       audienciasHoy.push({
         numero: data.numero || "Sin número",
-        asignadaA: data.asignada || "Sin asignación"
+        asignadaA: data.asignada || "Sin asignación",
+        hora: data.horaAudiencia || "Sin hora"  // <-- agregué esta línea
       });
     }
   });
@@ -1408,7 +1408,7 @@ export async function verificarAudienciasHoy() {
     lista.innerHTML = "";
     audienciasHoy.forEach(item => {
       const li = document.createElement("li");
-      li.innerHTML = `<span class='icon'>✅</span> <strong>${item.numero}- <em>${item.asignadaA}</em></strong> `;
+      li.innerHTML = `<span class='icon'>✅</span> <strong>${item.numero} - <em>${item.hora}hr</em> - <em>${item.asignadaA}</em> </strong>`;
       lista.appendChild(li);
     });
 
@@ -1424,6 +1424,7 @@ export async function verificarAudienciasHoy() {
     }
   }
 }
+
 
 document.addEventListener("DOMContentLoaded", () => {
   verificarAudienciasHoy();
