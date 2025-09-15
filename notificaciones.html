@@ -35,7 +35,7 @@
       max-width:1200px; margin:0 auto; padding:.6rem 1rem;
     }
     .brand{ display:flex; align-items:center; gap:.6rem; font-weight:800; letter-spacing:.2px; color:#fff; text-decoration:none; }
-    .brand img{ width:36px; height:36px; background:#fff; border-radius:8px; padding:4px; object-fit:contain; }
+    .brand img{ width:34px; height:34px; background:#fff; border-radius:8px; padding:3px; object-fit:contain; }
     .title-full{ display:inline; }
     .title-short{ display:none; }
     .header-actions{ justify-self:end; display:flex; gap:.5rem; flex-wrap:wrap; }
@@ -104,25 +104,82 @@
       .title-full{ display:none; }
       .title-short{ display:inline; font-weight:900; }
     }
+     .sys-header{
+    position: sticky; top:0; z-index: 50;
+    background: linear-gradient(90deg, var(--blue), var(--green));
+    box-shadow: 0 6px 16px rgba(0,0,0,.15);
+    color:#fff;
+  }
+
+  .header-row{
+    display:flex;
+    justify-content:space-between; /* distribuye logo izquierda, botones derecha */
+    align-items:center;
+    max-width:1200px;
+    margin:0 auto;
+    padding:.6rem 1rem;
+    flex-wrap:wrap;
+  }
+
+  .brand{
+    display:flex; align-items:center; gap:.6rem;
+    font-weight:800; color:#fff; text-decoration:none;
+  }
+
+  .brand img{
+    width:34px; height:34px; border-radius:8px;
+    background:#fff; padding:3px; object-fit:contain;
+  }
+
+  .title-full{ display:inline; }
+  .title-short{ display:none; }
+
+  .header-actions{
+    display:flex;
+    gap:.5rem;
+    flex-wrap:wrap;
+    margin-left:auto; /* asegura que se pegue a la derecha */
+  }
+
+  .btn{ padding:8px 14px; border:none; border-radius:10px; cursor:pointer; font-weight:700; }
+  .btn-outline{ background:transparent; color:#fff; border:1px solid #ffffffb3; }
+  .btn-outline:hover{ background:#ffffff1a; }
+  .btn-blue{ background:#0288d1; color:#fff; }
+  .btn-green{ background:#16a34a; color:#fff; }
+
+  /* ===== Responsive ===== */
+  @media (max-width:640px){
+    .header-row{
+      flex-direction:column;
+      align-items:flex-start;
+      gap:.6rem;
+    }
+    .header-actions{
+      justify-content:center;
+      width:100%;
+      margin-left:0;
+    }
+    .title-full{ display:none; }
+    .title-short{ display:inline; font-weight:900; }
+  }
+  
   </style>
 </head>
 <body>
 
-<!-- ===== HEADER ===== -->
 <header class="sys-header">
   <div class="header-row">
     <a href="juzgado.html" class="brand">
       <img src="logo.png" alt="Logo">
       <span class="title-full">Juzgado Vial Maipú — Notificaciones</span>
-      <span class="title-short">Notificaciones</span>
+      <span class="title-short">Juzgado Vial Maipú — Notificaciones</span>
     </a>
     <div class="header-actions">
       <a href="juzgado.html"><button class="btn btn-outline">⬅ Volver</button></a>
-      <button id="btnPDF" class="btn btn-green">📄 PDF</button>
+      <button id="btnPDF" class="btn btn-green">📄 Descargar PDF</button>
     </div>
   </div>
 </header>
-
 <div class="container">
 
   <!-- ===== Toolbar filtros ===== -->
