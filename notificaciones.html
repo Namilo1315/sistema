@@ -36,6 +36,8 @@
     }
     .brand{ display:flex; align-items:center; gap:.6rem; font-weight:800; letter-spacing:.2px; color:#fff; text-decoration:none; }
     .brand img{ width:36px; height:36px; background:#fff; border-radius:8px; padding:4px; object-fit:contain; }
+    .title-full{ display:inline; }
+    .title-short{ display:none; }
     .header-actions{ justify-self:end; display:flex; gap:.5rem; flex-wrap:wrap; }
     .btn{ padding:8px 14px; border:none; border-radius:10px; cursor:pointer; font-weight:700; }
     .btn-outline{ background:transparent; color:#fff; border:1px solid #ffffffb3; }
@@ -98,6 +100,9 @@
       .toolbar{ grid-template-columns:1fr 1fr; }
       .t-span2, .t-span3, .t-span4{ grid-column: span 2; }
       .num{ width:100%; }
+      /* Header móvil: logo + “Notificaciones” + 2 botones */
+      .title-full{ display:none; }
+      .title-short{ display:inline; font-weight:900; }
     }
   </style>
 </head>
@@ -107,7 +112,9 @@
 <header class="sys-header">
   <div class="header-row">
     <a href="juzgado.html" class="brand">
-      <img src="logo.png" alt="Logo"> <span>Juzgado Vial Maipú — Notificaciones</span>
+      <img src="logo.png" alt="Logo">
+      <span class="title-full">Juzgado Vial Maipú — Notificaciones</span>
+      <span class="title-short">Notificaciones</span>
     </a>
     <div class="header-actions">
       <a href="juzgado.html"><button class="btn btn-outline">⬅ Volver</button></a>
@@ -178,6 +185,22 @@
   /* ===== Utils ===== */
   const toDateOnly = (d)=> new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const fmtDMY = (d)=> [String(d.getDate()).padStart(2,"0"), String(d.getMonth()+1).padStart(2,"0"), d.getFullYear()].join("/");
+
+  // 👉 PARSEO LOCAL: evita el “día menos” (no usa UTC interno del Date ISO string)
+  function parseDateAny(s){
+    if(!s) return null;
+    if(/^\d{4}-\d{2}-\d{2}$/.test(s)){ // YYYY-MM-DD (input date)
+      const [y,m,d]=s.split("-").map(Number);
+      return new Date(y, m-1, d);
+    }
+    if(/^\d{2}\/\d{2}\/\d{4}$/.test(s)){ // DD/MM/YYYY por si hubiera
+      const [d,m,y]=s.split("/").map(Number);
+      return new Date(y, m-1, d);
+    }
+    const d = new Date(s);
+    return isNaN(d) ? null : new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+
   function normalizePhone(raw, cc){
     let n=(raw||"").toString().trim();
     if(!n) return "";
@@ -190,7 +213,8 @@
   function includesQ(s, q){ return (s||"").toString().toLowerCase().includes(q); }
 
   function composeMessage(r){
-    const fecha = r.fecha ? fmtDMY(new Date(r.fecha)) : "—";
+    const dObj = parseDateAny(r.fecha);
+    const fecha = dObj ? fmtDMY(dObj) : "—";
     const hora  = r.hora ? `${r.hora} hs` : "";
     return `*Juzgado de Tránsito Zona Este de la Municipalidad de Maipú* — Accidente N° *${r.numero}* (caratulado *${r.nombre}*).
 Se notifica que debe concurrir a la AUDIENCIA el día *${fecha}* a las *${hora}*, en Ruta Provincial 50 N°4359, Rodeo del Medio (Maipú).
@@ -202,6 +226,7 @@ Presente DNI y documentación del rodado. Si no puede asistir, un familiar o rep
     const today = toDateOnly(new Date());
     const q = (nfBuscar.value||"").toLowerCase();
     const range = nfRango.value;
+
     const upTo = range==="hoy" ? today
                : range==="7" ? new Date(today.getFullYear(), today.getMonth(), today.getDate()+7)
                : range==="30" ? new Date(today.getFullYear(), today.getMonth(), today.getDate()+30)
@@ -209,21 +234,19 @@ Presente DNI y documentación del rodado. Si no puede asistir, un familiar o rep
 
     const out = [];
     accidentes.forEach(a=>{
-      // si el doc completo está marcado notificado, saltamos
       if(a.notificado===true) return;
 
-      // fecha válida para audiencias
-      const d = a.fechaAudiencia ? new Date(a.fechaAudiencia) : null;
+      // fecha válida para audiencias (PARSEO LOCAL)
+      const d = parseDateAny(a.fechaAudiencia);
       if(!d) return;
       const dOnly = toDateOnly(d);
       if(range==="hoy" && (+dOnly!==+today)) return;
       if(upTo && (dOnly<today || dOnly>upTo)) return;
 
-      // función match búsqueda
       const baseMatch = (str)=> includesQ(str, q);
       const matchDoc = !q || baseMatch(a.numero)||baseMatch(a.nombre)||baseMatch(a.dni)||baseMatch(a.dominio);
 
-      // Titular (si aún no notificado)
+      // Titular
       if(a.notificado_titular!==true){
         const titular = {
           id:a.id, idx:null, rol:"Titular",
@@ -234,7 +257,7 @@ Presente DNI y documentación del rodado. Si no puede asistir, un familiar o rep
         if(matchDoc || baseMatch(titular.nombre) || baseMatch(titular.dni)) out.push(titular);
       }
 
-      // Participantes con notificado != true
+      // Participantes
       (a.participantes||[]).forEach((p,idx)=>{
         if(p?.notificado===true) return;
         const rec = {
@@ -247,8 +270,12 @@ Presente DNI y documentación del rodado. Si no puede asistir, un familiar o rep
       });
     });
 
-    // ordenar por fecha y hora
-    out.sort((r1,r2)=> (new Date(r1.fecha)-new Date(r2.fecha)) || (r1.hora||"").localeCompare(r2.hora||""));
+    // ordenar por fecha (PARSEO LOCAL) y hora
+    out.sort((r1,r2)=> {
+      const d1 = parseDateAny(r1.fecha) || new Date(0);
+      const d2 = parseDateAny(r2.fecha) || new Date(0);
+      return (+d1 - +d2) || (r1.hora||"").localeCompare(r2.hora||"");
+    });
     return out;
   }
 
@@ -269,6 +296,8 @@ Presente DNI y documentación del rodado. Si no puede asistir, un familiar o rep
       const card = document.createElement("div");
       card.className = "card";
 
+      const fechaTxt = (()=>{ const d=parseDateAny(r.fecha); return d ? fmtDMY(d) : "—"; })();
+
       card.innerHTML = `
         <div class="title">
           <span class="tag"># ${r.numero}</span>
@@ -276,7 +305,7 @@ Presente DNI y documentación del rodado. Si no puede asistir, un familiar o rep
         </div>
 
         <div class="row">
-          <div><strong>${r.fecha ? fmtDMY(new Date(r.fecha)):"—"}</strong>${r.hora?` — ${r.hora} hs`:""}</div>
+          <div><strong>${fechaTxt}</strong>${r.hora?` — ${r.hora} hs`:""}</div>
           <div class="muted">Asignada: ${r.asignada||"—"}</div>
         </div>
 
@@ -289,7 +318,6 @@ Presente DNI y documentación del rodado. Si no puede asistir, un familiar o rep
 
         <div class="actions">
           <button class="btn btn-blue btn-xs act-wa">WhatsApp</button>
-          <button class="btn btn-ghost btn-xs act-sms">SMS</button>
           <button class="btn btn-green btn-xs act-copy">Copiar</button>
           <button class="btn btn-blue btn-xs act-save">Guardar</button>
           <button class="btn btn-red btn-xs act-done">Marcar notificado</button>
@@ -305,14 +333,6 @@ Presente DNI y documentación del rodado. Si no puede asistir, un familiar o rep
         if(!phone){ alert("Cargá un teléfono válido."); return; }
         const msg = encodeURIComponent(composeMessage(r));
         window.open(`https://wa.me/${phone.replace(/\+/g,"")}?text=${msg}`,"_blank");
-      });
-
-      // SMS
-      card.querySelector(".act-sms").addEventListener("click", ()=>{
-        const phone = normalizePhone(numInput.value, ccInput.value);
-        if(!phone){ alert("Cargá un teléfono válido."); return; }
-        const msg = encodeURIComponent(composeMessage(r));
-        window.location.href = `sms:${phone}?body=${msg}`;
       });
 
       // Copiar
