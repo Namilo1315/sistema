@@ -197,7 +197,16 @@
     padding: 8px 6px;
   }
 }
-
+  /* 🔹 Ajuste especial para pantallas chicas */
+  @media (max-width: 768px) {
+    .nav {
+      flex-wrap: nowrap;  /* que no se bajen */
+      /* si no entran, scrollean lateral */
+    }
+    .nav-item {
+      flex: 1 0 auto;     /* todos ocupan espacio proporcional */
+    }
+  }
 
   </style>
 </head>
