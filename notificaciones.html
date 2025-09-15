@@ -1,289 +1,413 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta charset="UTF-8">
-  <title>Notificaciones Juzgado</title>
+  <meta charset="UTF-8" />
+  <title>Notificaciones de Audiencias</title>
   <link rel="icon" href="logo.png" type="image/png">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Export PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
   <style>
-    body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-    background: #f9f9f9;
-  }
+    :root{
+      --blue:#0a9ad9;    /* azul logo */
+      --green:#53b44c;   /* verde logo */
+      --orange:#f59e0b;  /* naranja logo */
+      --bg:#f6f8fb;
+      --card:#ffffff;
+      --text:#0b1220;
+      --muted:#64748b;
+      --border:#e5e7eb;
+    }
+    html,body{ background:var(--bg); color:var(--text); font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif; margin:0; }
+    *{ box-sizing:border-box; }
 
-   
+    /* ===== Header ===== */
+    .sys-header{
+      position: sticky; top:0; z-index: 50;
+      background: linear-gradient(90deg, var(--blue), var(--green));
+      box-shadow: 0 6px 16px rgba(0,0,0,.15);
+      color:#fff;
+    }
+    .header-row{
+      display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:1rem;
+      max-width:1200px; margin:0 auto; padding:.6rem 1rem;
+    }
+    .brand{ display:flex; align-items:center; gap:.6rem; font-weight:800; letter-spacing:.2px; color:#fff; text-decoration:none; }
+    .brand img{ width:36px; height:36px; background:#fff; border-radius:8px; padding:4px; object-fit:contain; }
+    .header-actions{ justify-self:end; display:flex; gap:.5rem; flex-wrap:wrap; }
+    .btn{ padding:8px 14px; border:none; border-radius:10px; cursor:pointer; font-weight:700; }
+    .btn-outline{ background:transparent; color:#fff; border:1px solid #ffffffb3; }
+    .btn-outline:hover{ background:#ffffff1a; }
+    .btn-blue{ background:#0288d1; color:#fff; }
+    .btn-blue:hover{ background:#0277bd; }
+    .btn-green{ background:#16a34a; color:#fff; }
+    .btn-green:hover{ background:#14843f; }
+    .btn-red{ background:#e53935; color:#fff; }
+    .btn-ghost{ background:#eef2f7; color:#0f172a; }
 
-    #mensajes {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-      gap: 20px;
-    }
+    .container{ max-width:1200px; margin: 16px auto; padding: 0 16px; }
 
-    .mensaje {
-      background: #fff;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      padding: 14px 14px 40px 14px;
-      box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
-      font-size: 13px;
-      line-height: 1.3;
-      position: relative;
+    /* ===== Toolbar ===== */
+    .toolbar{
+      display:grid; grid-template-columns: repeat(8, 1fr); gap:10px; align-items:end; margin: 10px 0 16px;
     }
+    .toolbar label{ font-size:12px; color:#0f172a; font-weight:800; display:flex; flex-direction:column; gap:6px; }
+    .toolbar input[type="text"], .toolbar select{
+      border:1px solid var(--border); border-radius:10px; padding:9px 10px; background:#fff; color:#111827;
+    }
+    .t-span2{ grid-column: span 2; }
+    .t-span3{ grid-column: span 3; }
+    .t-span4{ grid-column: span 4; }
 
-    .mensaje strong {
-      color: #0040ff;
+    /* ===== Cards ===== */
+    .grid{
+      display:grid; grid-template-columns: repeat(3, 1fr); gap:14px;
     }
+    .card{
+      background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px;
+      box-shadow:0 6px 18px rgba(2,19,32,.06); position:relative;
+      display:flex; flex-direction:column; gap:10px; min-height:180px;
+    }
+    .title{ font-weight:900; font-size:15px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+    .tag{
+      display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border-radius:999px; font-size:12px;
+      background:#eef2f7; color:#111827; border:1px dashed #cbd5e1;
+    }
+    .muted{ color:var(--muted); font-size:12px; }
 
-    .btn-copiar {
-      position: absolute;
-      bottom: 8px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      padding: 6px 10px;
-      cursor: pointer;
-      font-size: 12px;
+    .row{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+    .phone{
+      display:flex; gap:6px; align-items:center; flex-wrap:nowrap;
     }
+    .phone input{
+      border:1px solid var(--border); border-radius:10px; padding:9px 10px; background:#fff; color:#111827;
+    }
+    .cc{ width:90px; }
+    .num{ width:180px; }
+    .actions{ display:flex; gap:6px; flex-wrap:wrap; }
+    .btn-xs{ padding:6px 10px; border-radius:8px; font-size:12px; }
 
-    /* Botón de eliminar más pequeño y centrado */
-    .btn-eliminar {
-      position: absolute;
-      top: 4px;
-      right: 4px;
-      background: #e74c3c;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 14px;
-      height: 14px;
-      font-size: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-      cursor: pointer;
-    }
-    header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-  header h1 {
-    font-size: 22px;
-    margin: 0;
-    text-align: center;
-    flex: 1;
-    font-weight: 600;
-  }
-  .btn {
-    padding: 8px 14px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    color: white;
-  }
-  .btn-volver {
-    background: #2196F3;
-  }
-  .btn-volver:hover {
-    background: #1976D2;
-    color: #ffffff;
-  }
-  .btn-pdf {
-    background:  #388E3C;
-  }
-  .btn-pdf:hover {
-    background:#4CAF50; 
-    color: #ffffff;
+    .empty{ padding:18px; text-align:center; color:var(--muted); border:1px dashed var(--border); border-radius:12px; background:#fff; }
 
-  }
-@media (max-width: 768px) {
-    header {
-      flex-direction: column;
-      align-items: stretch;
-      text-align: center;
+    /* ===== Responsive ===== */
+    @media (max-width: 1024px){ .grid{ grid-template-columns:1fr 1fr; } .toolbar{ grid-template-columns: repeat(4, 1fr); } .t-span4{ grid-column: span 4; } }
+    @media (max-width: 640px){
+      .grid{ grid-template-columns:1fr; }
+      .toolbar{ grid-template-columns:1fr 1fr; }
+      .t-span2, .t-span3, .t-span4{ grid-column: span 2; }
+      .num{ width:100%; }
     }
-    header h1 {
-      font-size: 18px;
-    }
-    .btn {
-      padding: 6px 10px;
-      font-size: 13px;
-    }
-    .chart-container {
-      grid-template-columns: 1fr;
-    }
-    .chart-row {
-      flex-direction: column;
-      align-items: center;
-    }
-    .chart-row .chart-box {
-      max-width: 100%;
-    }
-  }
   </style>
 </head>
 <body>
 
-  <header>
-    <a href="juzgado.html"> <button class="btn btn-volver">⬅ Volver</button> </a>
-     <h1>Notificaciones para Audiencias</h1>
-     <button class="btn btn-pdf" id="btnPDF">📄 Descargar en PDF</button>
-   </header>
+<!-- ===== HEADER ===== -->
+<header class="sys-header">
+  <div class="header-row">
+    <a href="juzgado.html" class="brand">
+      <img src="logo.png" alt="Logo"> <span>Juzgado Vial Maipú — Notificaciones</span>
+    </a>
+    <div class="header-actions">
+      <a href="juzgado.html"><button class="btn btn-outline">⬅ Volver</button></a>
+      <button id="btnPDF" class="btn btn-green">📄 PDF</button>
+    </div>
+  </div>
+</header>
 
-  <div class="text-center" id="mensajes">Cargando mensajes...</div>
+<div class="container">
 
+  <!-- ===== Toolbar filtros ===== -->
+  <form class="toolbar" onsubmit="return false">
+    <label class="t-span2">Ver
+      <select id="nfRango">
+        <option value="hoy">Audiencias de HOY</option>
+        <option value="7">Próximos 7 días</option>
+        <option value="30" selected>Próximos 30 días</option>
+        <option value="todos">Todas con fecha</option>
+      </select>
+    </label>
+
+    <label class="t-span3">Buscar (DNI / Nombre / Nº)
+      <input type="text" id="nfBuscar" placeholder="Ej: 36222333 o 01/2025 o Pérez">
+    </label>
+
+    <label>Prefijo país
+      <input type="text" id="nfCC" value="+54">
+    </label>
+
+    <div class="t-span2" style="display:flex; gap:8px; align-items:end;">
+      <button id="nfAplicar" class="btn btn-blue" type="button">Aplicar</button>
+      <button id="nfLimpiar" class="btn btn-ghost" type="button">Limpiar</button>
+    </div>
+  </form>
+
+  <!-- ===== Lista ===== -->
+  <div id="cards" class="grid">
+    <div class="empty">Cargando notificaciones…</div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-import {
-  getFirestore, collection, getDocs, query, where, doc, updateDoc
-} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+  import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCLhhSoQ9gljKTPvWVZVGI3G8dU9dmi53Y",
-  authDomain: "mi-juzgado-447a4.firebaseapp.com",
-  projectId: "mi-juzgado-447a4",
-  storageBucket: "mi-juzgado-447a4.appspot.com",
-  messagingSenderId: "276360645206",
-  appId: "1:276360645206:web:e6c016d29d98add7bec9f7"
-};
+  /* ===== FIREBASE ===== */
+  const firebaseConfig = {
+    apiKey: "AIzaSyCLhhSoQ9gljKTPvWVZVGI3G8dU9dmi53Y",
+    authDomain: "mi-juzgado-447a4.firebaseapp.com",
+    projectId: "mi-juzgado-447a4",
+    storageBucket: "mi-juzgado-447a4.appspot.com",
+    messagingSenderId: "276360645206",
+    appId: "1:276360645206:web:e6c016d29d98add7bec9f7"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const contenedorMensajes = document.getElementById("mensajes");
+  /* ===== State ===== */
+  let accidentes = [];
+  let currentRows = []; // lo que se muestra (para PDF)
 
-let mensajesActuales = [];
+  const cards = document.getElementById("cards");
+  const nfRango  = document.getElementById("nfRango");
+  const nfBuscar = document.getElementById("nfBuscar");
+  const nfCC     = document.getElementById("nfCC");
 
-async function generarMensajes() {
-  const accidentesRef = collection(db, "accidentes");
-  let q = query(accidentesRef, where("notificado", "==", false));
-  let snapshot = await getDocs(q);
-  if (snapshot.empty) snapshot = await getDocs(accidentesRef);
+  /* ===== Utils ===== */
+  const toDateOnly = (d)=> new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const fmtDMY = (d)=> [String(d.getDate()).padStart(2,"0"), String(d.getMonth()+1).padStart(2,"0"), d.getFullYear()].join("/");
+  function normalizePhone(raw, cc){
+    let n=(raw||"").toString().trim();
+    if(!n) return "";
+    n=n.replace(/[^\d+]/g,"");
+    if(n.startsWith("+")) return n;
+    if(n.startsWith("0")) n=n.slice(1);
+    if(n.startsWith("15")) n=n.slice(2);
+    return (cc||"").replace(/\s/g,"")+n;
+  }
+  function includesQ(s, q){ return (s||"").toString().toLowerCase().includes(q); }
 
-  mensajesActuales = [];
-
-  snapshot.forEach(docSnap => {
-    const data = docSnap.data();
-    if (data.notificado !== true) {
-      const idDoc = docSnap.id;
-      const numero = data.numero || "Sin número";
-      const fecha = data.fechaAudiencia || "Sin fecha";
-      const hora = data.horaAudiencia || "Sin hora";
-      const juzgado = data.juzgado || "Sin juzgado";
-      const nombre = data.nombre || "Sin nombre";
-
-      // Cada accidente + su notificación principal
-      mensajesActuales.push({ texto: crearMensaje(nombre, numero, fecha, hora, juzgado), id: idDoc });
-
-      // + las notificaciones para cada participante (si existen)
-      (data.participantes || []).forEach(part => {
-        mensajesActuales.push({ texto: crearMensaje(part.nombre || "Sin nombre", numero, fecha, hora, juzgado), id: idDoc });
-      });
-    }
-  });
-
-  if (mensajesActuales.length === 0) {
-    contenedorMensajes.innerHTML = "<p>No hay notificaciones pendientes.</p>";
-    return;
+  function composeMessage(r){
+    const fecha = r.fecha ? fmtDMY(new Date(r.fecha)) : "—";
+    const hora  = r.hora ? `${r.hora} hs` : "";
+    return `*Juzgado de Tránsito Zona Este de la Municipalidad de Maipú* — Accidente N° *${r.numero}* (caratulado *${r.nombre}*).
+Se notifica que debe concurrir a la AUDIENCIA el día *${fecha}* a las *${hora}*, en Ruta Provincial 50 N°4359, Rodeo del Medio (Maipú).
+Presente DNI y documentación del rodado. Si no puede asistir, un familiar o representante legal podrá presentarse con certificado médico (Arts. 109 y 113 Ley de Tránsito).`;
   }
 
-  contenedorMensajes.innerHTML = "";
-  mensajesActuales.forEach(({ texto, id }) => {
-    const div = document.createElement("div");
-    div.className = "mensaje";
-    div.innerHTML = texto;
+  /* ===== Build recipients (pendientes) ===== */
+  function buildRecipients(){
+    const today = toDateOnly(new Date());
+    const q = (nfBuscar.value||"").toLowerCase();
+    const range = nfRango.value;
+    const upTo = range==="hoy" ? today
+               : range==="7" ? new Date(today.getFullYear(), today.getMonth(), today.getDate()+7)
+               : range==="30" ? new Date(today.getFullYear(), today.getMonth(), today.getDate()+30)
+               : null;
 
-    const btnEliminar = document.createElement("button");
-    btnEliminar.className = "btn-eliminar";
-    btnEliminar.textContent = "×";
-    btnEliminar.onclick = async () => {
-      try {
-        await updateDoc(doc(db, "accidentes", id), { notificado: true });
-        div.remove();
-      } catch (e) {
-        alert("Error: " + e.message);
+    const out = [];
+    accidentes.forEach(a=>{
+      // si el doc completo está marcado notificado, saltamos
+      if(a.notificado===true) return;
+
+      // fecha válida para audiencias
+      const d = a.fechaAudiencia ? new Date(a.fechaAudiencia) : null;
+      if(!d) return;
+      const dOnly = toDateOnly(d);
+      if(range==="hoy" && (+dOnly!==+today)) return;
+      if(upTo && (dOnly<today || dOnly>upTo)) return;
+
+      // función match búsqueda
+      const baseMatch = (str)=> includesQ(str, q);
+      const matchDoc = !q || baseMatch(a.numero)||baseMatch(a.nombre)||baseMatch(a.dni)||baseMatch(a.dominio);
+
+      // Titular (si aún no notificado)
+      if(a.notificado_titular!==true){
+        const titular = {
+          id:a.id, idx:null, rol:"Titular",
+          numero:a.numero||"—", nombre:a.nombre||"—", dni:a.dni||"—",
+          fecha:a.fechaAudiencia, hora:a.horaAudiencia||"", asignada:a.asignada||"—",
+          telefono:a.telefono||""
+        };
+        if(matchDoc || baseMatch(titular.nombre) || baseMatch(titular.dni)) out.push(titular);
       }
-    };
-    div.appendChild(btnEliminar);
 
-    const btnCopiar = document.createElement("button");
-    btnCopiar.className = "btn-copiar";
-    btnCopiar.textContent = "Copiar";
-    btnCopiar.onclick = () => {
-      const textoPlano = div.textContent.replace("×Copiar", "").trim();
-      navigator.clipboard.writeText(textoPlano);
-      alert("Mensaje copiado");
-    };
-    div.appendChild(btnCopiar);
+      // Participantes con notificado != true
+      (a.participantes||[]).forEach((p,idx)=>{
+        if(p?.notificado===true) return;
+        const rec = {
+          id:a.id, idx, rol:"Participante",
+          numero:a.numero||"—", nombre:p?.nombre||"—", dni:p?.dni||"—",
+          fecha:a.fechaAudiencia, hora:a.horaAudiencia||"", asignada:a.asignada||"—",
+          telefono:p?.telefono||""
+        };
+        if(matchDoc || baseMatch(rec.nombre) || baseMatch(rec.dni)) out.push(rec);
+      });
+    });
 
-    contenedorMensajes.appendChild(div);
-  });
-}
-
-function crearMensaje(nombre, numero, fecha, hora, juzgado) {
-  return `
-<strong>*Juzgado de Tránsito Zona Este de la Municipalidad de Maipú*</strong> por Accidente Nº <strong>*${numero}*</strong> caratulado <strong>*${nombre}*</strong> informa:
-<br><br>
-Se notifica que debe concurrir personalmente a la audiencia el día <strong>*${fecha}*</strong> a las <strong>*${hora}*</strong> hs, en el <strong>*Juzgado de Tránsito Zona Este*</strong>, ubicado en Ruta Provincial 50 Nº 4359 de Rodeo del Medio, Maipú. Podrá traer testigos, quienes deberán asistir con DNI. Asimismo, deberá concurrir con DNI y documentación del rodado involucrado.
-<br><br>
-En caso de no poder asistir, un familiar o representante legal podrá presentarse con certificado médico para reprogramar la audiencia, según lo establecido en los Arts. 109 y 113 de la Ley de Tránsito.
-<br><br>
-<strong>*Notificado: 261*</strong>
-  `;
-}
-
-// Función para limpiar HTML y extraer texto plano
-function limpiarHTML(html) {
-  const temporal = document.createElement("div");
-  temporal.innerHTML = html;
-  return temporal.textContent || temporal.innerText || "";
-}
-
-document.getElementById("btnPDF").addEventListener("click", () => {
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF("p", "mm", "a4");
-  const margin = 10;
-  const maxLineWidth = 190;
-
-  if (mensajesActuales.length === 0) {
-    alert("No hay mensajes para generar PDF.");
-    return;
+    // ordenar por fecha y hora
+    out.sort((r1,r2)=> (new Date(r1.fecha)-new Date(r2.fecha)) || (r1.hora||"").localeCompare(r2.hora||""));
+    return out;
   }
 
-  mensajesActuales.forEach(({ texto }, index) => {
-    if (index > 0) pdf.addPage();
+  /* ===== Render ===== */
+  function render(){
+    const rows = buildRecipients();
+    currentRows = rows;
+    cards.innerHTML = "";
 
-    const text = limpiarHTML(texto).replace(/\*/g, ""); // Quitar asteriscos
-    pdf.setFontSize(16);
-    pdf.setTextColor(33,33,33);
-    pdf.text("Notificación de Audiencia", margin, 20);
+    if(!rows.length){
+      cards.innerHTML = `<div class="empty">No hay notificaciones pendientes para el criterio seleccionado.</div>`;
+      return;
+    }
 
-    pdf.setFontSize(12);
-    pdf.setTextColor(0,0,0);
-    const splitText = pdf.splitTextToSize(text, maxLineWidth);
-    pdf.text(splitText, margin, 30);
+    const ccDefault = nfCC.value || "+54";
+
+    rows.forEach((r)=>{
+      const card = document.createElement("div");
+      card.className = "card";
+
+      card.innerHTML = `
+        <div class="title">
+          <span class="tag"># ${r.numero}</span>
+          <span><strong>${r.nombre}</strong> <span class="tag">${r.rol}</span></span>
+        </div>
+
+        <div class="row">
+          <div><strong>${r.fecha ? fmtDMY(new Date(r.fecha)):"—"}</strong>${r.hora?` — ${r.hora} hs`:""}</div>
+          <div class="muted">Asignada: ${r.asignada||"—"}</div>
+        </div>
+
+        <div class="row">
+          <div class="phone">
+            <input class="cc" type="text" value="${ccDefault}">
+            <input class="num" type="text" placeholder="Ej: 2616123456" value="${r.telefono||""}">
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-blue btn-xs act-wa">WhatsApp</button>
+          <button class="btn btn-ghost btn-xs act-sms">SMS</button>
+          <button class="btn btn-green btn-xs act-copy">Copiar</button>
+          <button class="btn btn-blue btn-xs act-save">Guardar</button>
+          <button class="btn btn-red btn-xs act-done">Marcar notificado</button>
+        </div>
+      `;
+
+      const ccInput  = card.querySelector(".cc");
+      const numInput = card.querySelector(".num");
+
+      // WhatsApp
+      card.querySelector(".act-wa").addEventListener("click", ()=>{
+        const phone = normalizePhone(numInput.value, ccInput.value);
+        if(!phone){ alert("Cargá un teléfono válido."); return; }
+        const msg = encodeURIComponent(composeMessage(r));
+        window.open(`https://wa.me/${phone.replace(/\+/g,"")}?text=${msg}`,"_blank");
+      });
+
+      // SMS
+      card.querySelector(".act-sms").addEventListener("click", ()=>{
+        const phone = normalizePhone(numInput.value, ccInput.value);
+        if(!phone){ alert("Cargá un teléfono válido."); return; }
+        const msg = encodeURIComponent(composeMessage(r));
+        window.location.href = `sms:${phone}?body=${msg}`;
+      });
+
+      // Copiar
+      card.querySelector(".act-copy").addEventListener("click", async ()=>{
+        try{ await navigator.clipboard.writeText(composeMessage(r)); alert("Mensaje copiado."); }catch{ alert("No se pudo copiar."); }
+      });
+
+      // Guardar teléfono
+      card.querySelector(".act-save").addEventListener("click", async ()=>{
+        const raw = numInput.value.trim();
+        if(!r.id){ alert("No se puede guardar: falta ID del documento."); return; }
+        try{
+          const ref = doc(db, "accidentes", r.id);
+          if(r.idx===null){
+            await updateDoc(ref, { telefono: raw });
+            const acc = accidentes.find(a=>a.id===r.id); if(acc) acc.telefono = raw;
+          }else{
+            const acc = accidentes.find(a=>a.id===r.id);
+            const parts = (acc.participantes||[]).map((p,idx)=> idx===r.idx ? ({...p, telefono: raw}) : p );
+            await updateDoc(ref, { participantes: parts });
+            if(acc) acc.participantes = parts;
+          }
+          alert("Teléfono guardado.");
+        }catch(e){ console.error(e); alert("No se pudo guardar. Ver reglas de Firestore."); }
+      });
+
+      // Marcar notificado (elimina de la lista)
+      card.querySelector(".act-done").addEventListener("click", async ()=>{
+        if(!confirm("¿Confirmar que esta persona ya fue notificada?")) return;
+        try{
+          const ref = doc(db, "accidentes", r.id);
+          if(r.idx===null){
+            await updateDoc(ref, { notificado_titular: true });
+            const acc = accidentes.find(a=>a.id===r.id); if(acc) acc.notificado_titular = true;
+          }else{
+            const acc = accidentes.find(a=>a.id===r.id);
+            const parts = (acc.participantes||[]).map((p,idx)=> idx===r.idx ? ({...p, notificado: true}) : p );
+            await updateDoc(ref, { participantes: parts });
+            if(acc) acc.participantes = parts;
+          }
+          // Si todos notificados -> set notificado:true
+          const acc = accidentes.find(a=>a.id===r.id);
+          const titularDone = acc?.notificado_titular===true || !acc?.nombre;
+          const parts = acc?.participantes||[];
+          const allPartsDone = parts.every(p=>p?.notificado===true);
+          if(titularDone && allPartsDone){
+            await updateDoc(ref, { notificado: true });
+            acc.notificado = true;
+          }
+          // sacar tarjeta
+          card.remove();
+          if(!cards.children.length){
+            cards.innerHTML = `<div class="empty">No hay notificaciones pendientes para el criterio seleccionado.</div>`;
+          }
+        }catch(e){ console.error(e); alert("No se pudo marcar como notificado."); }
+      });
+
+      cards.appendChild(card);
+    });
+  }
+
+  /* ===== PDF ===== */
+  document.getElementById("btnPDF").addEventListener("click", async ()=>{
+    const { jsPDF } = window.jspdf;
+    if(!currentRows.length){ alert("No hay mensajes para generar PDF."); return; }
+    const pdf = new jsPDF("p","mm","a4");
+    const margin = 12, maxW = 190;
+
+    currentRows.forEach((r,idx)=>{
+      if(idx>0) pdf.addPage();
+      pdf.setFont("helvetica","bold"); pdf.setFontSize(16);
+      pdf.text("Notificación de Audiencia", margin, 16);
+      pdf.setFontSize(12); pdf.setFont("helvetica","normal");
+
+      const text = composeMessage(r);
+      const lines = pdf.splitTextToSize(text, maxW);
+      pdf.text(lines, margin, 28);
+    });
+
+    pdf.save("notificaciones_audiencias.pdf");
   });
 
-  pdf.save("notificaciones_audiencias.pdf");
-});
+  /* ===== Toolbar events ===== */
+  document.getElementById("nfAplicar").addEventListener("click", render);
+  document.getElementById("nfLimpiar").addEventListener("click", ()=>{
+    nfBuscar.value=""; nfRango.value="30"; render();
+  });
 
-generarMensajes();
+  /* ===== Init ===== */
+  async function init(){
+    const snap = await getDocs(collection(db,"accidentes"));
+    accidentes = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+    render();
+  }
+  init();
 </script>
-
 </body>
 </html>

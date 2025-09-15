@@ -5,137 +5,219 @@
 <title>Métricas de Accidentes</title>
 <link rel="icon" href="logo.png" type="image/png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Charts + Export -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-    background: #f9f9f9;
+  :root{
+    --blue:#0a9ad9;      /* azul logo */
+    --green:#53b44c;     /* verde logo */
+    --orange:#f59e0b;    /* naranja logo */
+    --bg:#f6f8fb;
+    --card:#ffffff;
+    --text:#0b1220;
+    --muted:#64748b;
+    --border:#e5e7eb;
   }
-  /* HEADER */
-  header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 20px;
+  html,body{ background:var(--bg); color:var(--text); font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif; }
+  *{ box-sizing:border-box; }
+
+  /* ===== Header ===== */
+  .sys-header{
+    position: sticky; top:0; z-index: 50;
+    background: linear-gradient(90deg, var(--blue), var(--green));
+    box-shadow: 0 6px 16px rgba(0,0,0,.15);
+    color:#fff;
   }
-  header h1 {
-    font-size: 22px;
-    margin: 0;
-    text-align: center;
-    flex: 1;
+  .header-row{
+    display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:1rem;
+    max-width:1200px; margin:0 auto; padding:.6rem 1rem;
   }
-  .btn {
-    padding: 8px 14px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    color: white;
+  .brand{ display:flex; align-items:center; gap:.6rem; font-weight:800; letter-spacing:.2px; color:#fff; text-decoration:none; }
+  .brand img{ width:36px; height:36px; background:#fff; border-radius:8px; padding:4px; object-fit:contain; }
+  .header-actions{ justify-self:end; display:flex; gap:.5rem; flex-wrap:wrap; }
+  .btn{ padding:8px 14px; border:none; border-radius:10px; cursor:pointer; font-weight:700; }
+  .btn-blue{ background:#0288d1; color:#fff; }
+  .btn-blue:hover{ background:#0277bd; }
+  .btn-green{ background:#16a34a; color:#fff; }
+  .btn-green:hover{ background:#14843f; }
+  .btn-outline{ background:transparent; color:#fff; border:1px solid #ffffffb3; }
+  .btn-outline:hover{ background:#ffffff1a; }
+
+  .container{ max-width:1200px; margin: 16px auto; padding: 0 16px; }
+
+  /* ===== KPIs ===== */
+  .kpis{
+    display:grid; grid-template-columns: repeat(4,1fr); gap:16px; margin-top:16px;
   }
-  .btn-volver {
-    background: #2196F3;
+  .kpi{
+    background:var(--card); border:1px solid var(--border); border-left:6px solid var(--blue);
+    border-radius:12px; padding:14px 16px; box-shadow:0 6px 18px rgba(2,19,32,.06);
   }
-  .btn-volver:hover {
-    background: #1976D2;
+  .kpi h3{ margin:0 0 6px; font-size:13px; color:var(--muted); font-weight:800; text-transform:uppercase; letter-spacing:.4px; }
+  .kpi .value{ font-size:28px; font-weight:900; line-height:1; }
+  .kpi.blue{ border-left-color:var(--blue); }
+  .kpi.green{ border-left-color:var(--green); }
+  .kpi.orange{ border-left-color:var(--orange); }
+  .kpi small{ color:var(--muted); }
+
+  /* ===== Filtros activos ===== */
+  .filters{
+    display:flex; gap:8px; flex-wrap:wrap; margin:16px 0 4px;
   }
-  .btn-pdf {
-    background:  #388E3C;
+  .chip{
+    display:inline-flex; align-items:center; gap:8px;
+    background:#eef2f7; color:#111827; border:1px dashed #cbd5e1;
+    border-radius:999px; padding:6px 10px; font-weight:700; font-size:12px;
   }
-  .btn-pdf:hover {
-    background:#4CAF50; 
+  .chip button{ border:none; background:transparent; cursor:pointer; font-weight:900; color:#ef4444; }
+
+  /* ===== Grids ===== */
+  .grid-3{ display:grid; grid-template-columns: repeat(3, 1fr); gap:18px; }
+  .grid-2{ display:grid; grid-template-columns: repeat(2, 1fr); gap:18px; margin-top:18px; }
+
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:12px;
+    box-shadow:0 6px 18px rgba(2,19,32,.06); padding:14px; min-height:320px;
   }
-  /* GRÁFICOS */
-  .chart-container {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 35px;
-    max-width: 1100px;
-    margin: auto;
-    margin-top: 50px;
+  .card h4{ margin:0 0 10px; font-size:16px; font-weight:900; color:#0f172a; }
+  .card .sub{ color:var(--muted); font-size:12px; margin-bottom:8px; }
+
+  .chart-wrap{ position:relative; height:280px; }
+  canvas{ max-height:280px !important; }
+
+  /* ===== Controles temporales (cel friendly) ===== */
+  .temporal-controls{
+    display:grid; grid-template-columns: repeat(6, 1fr); gap:10px; align-items:end;
   }
-  .chart-box {
-    background: #fff;
-    padding: 15px;
-    border-radius: 10px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    height: 300px;
+  .temporal-controls label{ font-size:12px; color:#0f172a; font-weight:800; display:flex; flex-direction:column; gap:6px; }
+  .temporal-controls input[type="date"], .temporal-controls select{
+    border:1px solid var(--border); border-radius:10px; padding:8px 10px; background:#fff; color:#111827;
   }
-  canvas {
-    max-height: 300px !important;
-  }
-  .chart-row {
-    display: flex;
-    justify-content: center;
-    gap: 35px;
-    margin-top: 25px;
-    max-width: 1100px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .chart-row .chart-box {
-    flex: 1;
-    min-width: 300px;
-    max-width: 340px;
-  }
-  /* RESPONSIVE */
-  @media (max-width: 768px) {
-    header {
-      flex-direction: column;
-      align-items: stretch;
-      text-align: center;
-    }
-    header h1 {
-      font-size: 18px;
-    }
-    .btn {
-      padding: 6px 10px;
-      font-size: 13px;
-    }
-    .chart-container {
-      grid-template-columns: 1fr;
-    }
-    .chart-row {
-      flex-direction: column;
-      align-items: center;
-    }
-    .chart-row .chart-box {
-      max-width: 100%;
-    }
+  .temporal-controls .btn{ width:100%; }
+  .tc-span2{ grid-column: span 2; }
+  .tc-span3{ grid-column: span 3; }
+
+  /* Responsive */
+  @media (max-width: 1024px){ .grid-3{ grid-template-columns:1fr 1fr; } .kpis{ grid-template-columns: repeat(2,1fr); } }
+  @media (max-width: 640px){
+    .grid-3, .grid-2{ grid-template-columns:1fr; }
+    .kpis{ grid-template-columns:1fr; }
+    .temporal-controls{ grid-template-columns:1fr 1fr; }
+    .tc-span2{ grid-column: span 2; }
+    .tc-span3{ grid-column: span 2; }
   }
 </style>
 </head>
 <body>
 
-<header>
- <a href="juzgado.html"> <button class="btn btn-volver">⬅ Volver</button> </a>
-  <h1>📊 Análisis de Accidentes - Juzgado Vial</h1>
-  <button class="btn btn-pdf" id="btnPDF">📄 Descargar en PDF</button>
+<!-- ===== HEADER ===== -->
+<header class="sys-header">
+  <div class="header-row">
+    <a href="juzgado.html" class="brand">
+      <img src="logo.png" alt="Logo"> <span>Juzgado Vial Maipú — Dashboard</span>
+    </a>
+    <div class="header-actions">
+      <a href="juzgado.html"><button class="btn btn-outline">⬅ Volver</button></a>
+      <button id="btnLimpiar" class="btn btn-blue">Limpiar filtros</button>
+      <button class="btn btn-green" id="btnPDF">📄 Descargar PDF</button>
+    </div>
+  </div>
 </header>
 
-<div id="analisis">
-  <div class="chart-container">
-    <div class="chart-box"><canvas id="graficoTipo"></canvas></div>
-    <div class="chart-box"><canvas id="graficoEstado"></canvas></div>
-    <div class="chart-box"><canvas id="graficoAsignada"></canvas></div>
-  </div>
+<div class="container" id="dashboard">
 
-  <div class="chart-row">
-    <div class="chart-box"><canvas id="graficoFirmado"></canvas></div>
-    <div class="chart-box"><canvas id="graficoAlcohol"></canvas></div>
-    
-  </div>
+  <!-- KPIs -->
+  <section class="kpis" id="kpis">
+    <div class="kpi blue"><h3>Total de accidentes</h3><div class="value" id="kpiTotal">—</div><small id="kpiRango"></small></div>
+    <div class="kpi orange"><h3>Con alcohol</h3><div class="value" id="kpiAlcohol">—</div><small id="kpiAlcoholPct">—</small></div>
+    <div class="kpi green"><h3>Pendientes</h3><div class="value" id="kpiPendientes">—</div><small id="kpiPendHint">Estados: En proceso / Requerimientos / etc.</small></div>
+    <div class="kpi blue"><h3>Audiencias hoy</h3><div class="value" id="kpiHoy">—</div><small id="kpiHoyHint"></small></div>
+  </section>
+
+  <!-- Filtros activos -->
+  <div class="filters" id="chips"></div>
+
+  <!-- FILA 1 -->
+  <section class="grid-3">
+    <div class="card">
+      <h4>Tipo de Accidente</h4>
+      <div class="sub">Click para filtrar</div>
+      <div class="chart-wrap"><canvas id="chTipo"></canvas></div>
+    </div>
+    <div class="card">
+      <h4>Estado</h4>
+      <div class="sub">Click para filtrar</div>
+      <div class="chart-wrap"><canvas id="chEstado"></canvas></div>
+    </div>
+    <div class="card">
+      <h4>Asignada a</h4>
+      <div class="sub">Click para filtrar</div>
+      <div class="chart-wrap"><canvas id="chAsignada"></canvas></div>
+    </div>
+  </section>
+
+  <!-- FILA 2 -->
+  <section class="grid-3" style="margin-top:18px">
+    <div class="card">
+      <h4>Firmado por</h4>
+      <div class="sub">Click para filtrar</div>
+      <div class="chart-wrap"><canvas id="chFirma"></canvas></div>
+    </div>
+    <div class="card">
+      <h4>Alcohol</h4>
+      <div class="sub">Click para filtrar</div>
+      <div class="chart-wrap"><canvas id="chAlcohol"></canvas></div>
+    </div>
+    <div class="card">
+      <h4>Tendencia temporal</h4>
+      <div class="sub">La agrupación se define en “Rango y agrupación (línea)”</div>
+      <div class="chart-wrap"><canvas id="chTemporal"></canvas></div>
+    </div>
+  </section>
+
+  <!-- FILA 3 -->
+  <section class="grid-2">
+    <div class="card">
+      <h4>Estados por Tipo (apilado)</h4>
+      <div class="chart-wrap"><canvas id="chStacked"></canvas></div>
+    </div>
+    <!-- Reemplaza Top Asignados -->
+    <div class="card">
+      <h4>Rango y agrupación (línea)</h4>
+      <div class="sub">Afecta solo a la gráfica “Tendencia temporal”</div>
+      <form class="temporal-controls" onsubmit="return false">
+        <label class="tc-span2">Desde
+          <input type="date" id="gDesde">
+        </label>
+        <label class="tc-span2">Hasta
+          <input type="date" id="gHasta">
+        </label>
+        <label class="tc-span2">Agrupar por
+          <select id="gAgrupar">
+            <option value="mes">Mes</option>
+            <option value="trim">Trimestre</option>
+            <option value="anio">Año</option>
+          </select>
+        </label>
+        <button type="button" id="btnAplicarTemp" class="btn btn-blue">Aplicar</button>
+        <button type="button" id="btnHoyAnio" class="btn btn-outline">Año actual</button>
+        <button type="button" id="btn90Temp" class="btn btn-outline">Últ. 90 días</button>
+        <button type="button" id="btnClearTemp" class="btn">Limpiar</button>
+      </form>
+    </div>
+  </section>
 </div>
 
+<!-- ===== DATA + CHARTS ===== -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
   import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
-  
-  // Configuración Firebase
+
+  /* ===== FIREBASE ===== */
   const firebaseConfig = {
     apiKey: "AIzaSyCLhhSoQ9gljKTPvWVZVGI3G8dU9dmi53Y",
     authDomain: "mi-juzgado-447a4.firebaseapp.com",
@@ -144,163 +226,411 @@
     messagingSenderId: "276360645206",
     appId: "1:276360645206:web:e6c016d29d98add7bec9f7"
   };
-  
   const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  
-  const colores = [
-  
-    "#FF6F00", // naranja vibrante
-    
-    "#0288D1", // celeste brillante
-    "#2E7D32", // verde fresco
-    "#FFA950", // naranja claro
-    
-    "#66BB6A", // verde claro
-    "#03A9F4"  // celeste claro
-  ];
+  const db  = getFirestore(app);
 
-  // Variables globales para datos y filtros
+  /* ===== STATE ===== */
   let accidentes = [];
-  let filtroActivo = null; // { campo, valor }
-  let charts = {};
-  let colorPorEtiqueta = {};
-  
-  async function generarGraficos() {
-    const snap = await getDocs(collection(db, "accidentes"));
-    accidentes = snap.docs.map(d => d.data());
+  // filtros multi-selección estilo Power BI
+  const filtros = {
+    tipo: new Set(),
+    estado: new Set(),
+    asignada: new Set(),
+    firma: new Set(),
+    alcohol: new Set(),
+    mes: new Set(),   // YYYY-MM (solo si la línea está en "mes" y clickeás un punto)
+  };
 
-    asignarColoresFijos();
-    actualizarGraficos();
+  // Estado específico de la línea temporal
+  const linea = {
+    desde: null,   // Date | null
+    hasta: null,   // Date | null
+    agrupar: 'mes' // 'mes' | 'trim' | 'anio'
+  };
+
+  const charts = {};
+  const colorPorEtiqueta = {};
+  const basePalette = ["#0a9ad9","#53b44c","#f59e0b","#0288d1","#66bb6a","#ffa94d","#7dd3fc","#a7f3d0","#fcd34d"];
+  const grey = "#e5e7eb";
+
+  /* ===== Utils ===== */
+  const fmt = (n)=> n.toLocaleString("es-AR");
+  const toDateOnly = (d)=> new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const monthKey = (d)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+  const monthLabel = (key)=> {
+    const [y,m]=key.split("-"); 
+    const meses = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+    return `${meses[Number(m)-1]} ${y}`;
+  };
+
+  function setColor(label){
+    if(!colorPorEtiqueta[label]){
+      const used = Object.keys(colorPorEtiqueta).length;
+      colorPorEtiqueta[label] = basePalette[used % basePalette.length];
+    }
+    return colorPorEtiqueta[label];
   }
 
-  // Asignar colores fijos por cada etiqueta para mantener siempre el mismo color
-  function asignarColoresFijos() {
-    let colorIndex = 0;
-    const campos = ["tipo", "estado", "asignada", "alcohol", "firma"];
-    campos.forEach(campo => {
-      const valoresUnicos = [...new Set(accidentes.map(a => a[campo] || "Sin datos"))];
-      valoresUnicos.forEach(valor => {
-        if (!colorPorEtiqueta[valor]) {
-          colorPorEtiqueta[valor] = colores[colorIndex % colores.length];
-          colorIndex++;
-        }
+  function groupCount(arr, campo){
+    const out = {};
+    arr.forEach(a=>{
+      const v = (a[campo] ?? "Sin datos") || "Sin datos";
+      out[v] = (out[v]||0)+1;
+    });
+    return out;
+  }
+
+  // aplica todos los sets de filtros (menos el rango/agrupación de la línea)
+  function aplicarFiltros(){
+    return accidentes.filter(a=>{
+      // filtro de "mes" (clic en la línea cuando agrupar=mes)
+      if(filtros.mes.size){
+        const key = a.__mesKey || "—";
+        if(!filtros.mes.has(key)) return false;
+      }
+      // otros campos
+      for(const campo of ["tipo","estado","asignada","firma","alcohol"]){
+        const set = filtros[campo];
+        if(set.size && !set.has((a[campo] ?? "Sin datos") || "Sin datos")) return false;
+      }
+      return true;
+    });
+  }
+
+  function renderChips(){
+    const chips = document.getElementById("chips");
+    chips.innerHTML = "";
+    for(const campo of Object.keys(filtros)){
+      filtros[campo].forEach(valor=>{
+        const div = document.createElement("div");
+        div.className="chip";
+        const label = campo==="mes" ? monthLabel(valor) : valor;
+        div.innerHTML = `<span><strong>${campo}:</strong> ${label}</span> <button title="Quitar">×</button>`;
+        div.querySelector("button").onclick = ()=>{
+          filtros[campo].delete(valor);
+          actualizarTodo();
+        };
+        chips.appendChild(div);
       });
+    }
+  }
+
+  /* ===== KPIs ===== */
+  function renderKPIs(arr){
+    const total = arr.length;
+    const conAlcohol = arr.filter(a=>(a.alcohol||"NO")==="SI").length;
+    const pendientes = arr.filter(a=>{
+      const e = (a.estado||"").toLowerCase();
+      return /proceso|requerim|esperando|precorr|apremio|informe|infodata|firma/i.test(e) && !/finaliz|pagado|archivo|clausura/i.test(e);
+    }).length;
+
+    const hoy = new Date().toISOString().split("T")[0];
+    const hoyCount = arr.filter(a=>a.fechaAudiencia===hoy).length;
+
+    document.getElementById("kpiTotal").textContent = fmt(total);
+    document.getElementById("kpiAlcohol").textContent = fmt(conAlcohol);
+    document.getElementById("kpiAlcoholPct").textContent = total ? `${Math.round(conAlcohol*100/total)}% del total` : "—";
+    document.getElementById("kpiPendientes").textContent = fmt(pendientes);
+    document.getElementById("kpiHoy").textContent = fmt(hoyCount);
+    document.getElementById("kpiHoyHint").textContent = hoyCount ? "Con fecha de audiencia hoy" : "";
+    document.getElementById("kpiRango").textContent = (linea.desde||linea.hasta)
+      ? `${linea.desde?linea.desde.toISOString().slice(0,10):"—"} → ${linea.hasta?linea.hasta.toISOString().slice(0,10):"—"}`
+      : "Todos";
+  }
+
+  /* ===== Charts ===== */
+  function makeDonut(canvasId, dataMap, campo){
+    if(charts[canvasId]) charts[canvasId].destroy();
+    const labels = Object.keys(dataMap);
+    const values = Object.values(dataMap);
+    const bg = labels.map(l=>{
+      const active = filtros[campo].size ? filtros[campo].has(l) : true;
+      return active ? setColor(l) : grey;
     });
-  }
 
-  function actualizarGraficos() {
-    const datosFiltrados = aplicarFiltro();
-
-    charts["graficoTipo"] = crearGrafico("graficoTipo", contar(datosFiltrados, "tipo"), "Tipo de Accidente", "tipo");
-    charts["graficoEstado"] = crearGrafico("graficoEstado", contar(datosFiltrados, "estado"), "Estado del Accidente", "estado");
-    charts["graficoAsignada"] = crearGrafico("graficoAsignada", contar(datosFiltrados, "asignada"), "Asignada a", "asignada");
-    charts["graficoAlcohol"] = crearGrafico("graficoAlcohol", contar(datosFiltrados, "alcohol"), "Alcohol", "alcohol");
-    charts["graficoFirmado"] = crearGrafico("graficoFirmado", contar(datosFiltrados, "firma"), "Firmado por", "firma");
-  }
-
-  function aplicarFiltro() {
-    if (!filtroActivo) return accidentes;
-    return accidentes.filter(a => a[filtroActivo.campo] === filtroActivo.valor);
-  }
-
-  function contar(datos, campo) {
-    const conteo = {};
-    datos.forEach(a => {
-      const valor = a[campo] || "Sin datos";
-      conteo[valor] = (conteo[valor] || 0) + 1;
-    });
-    return conteo;
-  }
-
-  function crearGrafico(id, datos, titulo, campo) {
-    if (charts[id]) charts[id].destroy();
-
-    const ctx = document.getElementById(id);
-    const etiquetas = Object.keys(datos);
-    const valores = Object.values(datos);
-
-    // Generar colores fijos para cada etiqueta
-    const backgroundColors = etiquetas.map(label => colorPorEtiqueta[label] || "#CCCCCC");
-
-    const chart = new Chart(ctx, {
+    const ctx = document.getElementById(canvasId).getContext("2d");
+    charts[canvasId] = new Chart(ctx, {
       type: "doughnut",
-      data: {
-        labels: etiquetas,
-        datasets: [{
-          data: valores,
-          backgroundColor: backgroundColors
-        }]
-      },
+      data: { labels, datasets: [{ data: values, backgroundColor: bg, borderColor:"#fff", borderWidth:2, hoverOffset:8 }] },
       options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: {
-          animateRotate: true,
-          animateScale: true
+        maintainAspectRatio:false,
+        plugins:{
+          legend:{ position:"bottom", labels:{ boxWidth:12, boxHeight:12, font:{weight:"bold"} } },
+          tooltip:{ callbacks:{ label:(c)=> `${c.label}: ${fmt(c.parsed)} (${Math.round(c.parsed*100/values.reduce((a,b)=>a+b,0))}%)` } },
+          title:{ display:false }
         },
-        plugins: {
-          title: {
-            display: true,
-            text: titulo,
-            font: { size: 23, weight: 'bold' },
-            color: "#000000",
-            padding: { top: 0, bottom: 20 }
-          },
-          legend: {
-            position: "bottom",
-            labels: {
-              boxWidth: 12,
-              boxHeight: 12,
-              padding: 8,
-              color: "#000000",
-              font: { size: 12.5, weight: 'bold' }
-            }
-          },
-          tooltip: { enabled: true }
-        },
-        layout: {
-          padding: 15
-        },
-        onClick: (evt, elements) => {
-          if (elements.length > 0) {
-            const index = elements[0].index;
-            const valor = etiquetas[index];
-            if (filtroActivo && filtroActivo.campo === campo && filtroActivo.valor === valor) {
-              filtroActivo = null; // Quitar filtro si ya está activo en esa porción
-            } else {
-              filtroActivo = { campo, valor }; // Aplicar nuevo filtro
-            }
-            actualizarGraficos();
-          }
+        onClick:(evt, els)=>{
+          if(!els.length) return;
+          const i = els[0].index;
+          const v = labels[i];
+          if(filtros[campo].has(v)) filtros[campo].delete(v); else filtros[campo].add(v);
+          actualizarTodo();
         }
       }
     });
-    return chart;
   }
 
-  // Exportar a PDF
-  document.getElementById("btnPDF").addEventListener("click", async () => {
+  function makeBarHoriz(canvasId, dataMap, campo){
+    if(charts[canvasId]) charts[canvasId].destroy();
+    const entries = Object.entries(dataMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    const labels = entries.map(e=>e[0]);
+    const values = entries.map(e=>e[1]);
+    const bg = labels.map(l=> filtros[campo].size && !filtros[campo].has(l) ? grey : setColor(l));
+
+    const ctx = document.getElementById(canvasId).getContext("2d");
+    charts[canvasId] = new Chart(ctx, {
+      type:"bar",
+      data:{ labels, datasets:[{ data:values, backgroundColor:bg, borderRadius:8, borderSkipped:false }] },
+      options:{
+        maintainAspectRatio:false,
+        indexAxis:"y",
+        scales:{ x:{ grid:{ color:"#eef2f7"} }, y:{ grid:{ display:false } } },
+        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:(c)=> fmt(c.parsed.x) } } },
+        onClick:(evt,els)=>{
+          if(!els.length) return;
+          const i = els[0].index;
+          const v = labels[i];
+          if(filtros[campo].has(v)) filtros[campo].delete(v); else filtros[campo].add(v);
+          actualizarTodo();
+        }
+      }
+    });
+  }
+
+  // Serie temporal con rango + agrupación (mes/trim/año)
+  function makeLineTemporal(canvasId, arr){
+    if(charts[canvasId]) charts[canvasId].destroy();
+
+    // Filtrado por rango (solo para la línea)
+    const base = arr.filter(a=>{
+      const d = a.__date;
+      if(!d) return false;
+      if(linea.desde && d < linea.desde) return false;
+      if(linea.hasta && d > linea.hasta) return false;
+      return true;
+    });
+
+    // Construir ejes según agrupación
+    const keys = [];
+    const labels = [];
+    const counts = {};
+
+    function pushKey(k, label){ if(!keys.includes(k)){ keys.push(k); labels.push(label); } }
+    function step(date){
+      if(linea.agrupar==='mes'){ date.setMonth(date.getMonth()+1,1); }
+      else if(linea.agrupar==='trim'){ date.setMonth(date.getMonth()+3,1); }
+      else { date.setFullYear(date.getFullYear()+1,0,1); }
+    }
+    function keyFor(d){
+      if(linea.agrupar==='mes') return monthKey(d);
+      if(linea.agrupar==='trim'){ const q=Math.floor(d.getMonth()/3)+1; return `${d.getFullYear()}-Q${q}`; }
+      return String(d.getFullYear());
+    }
+    function labelFor(k){
+      if(linea.agrupar==='mes') return monthLabel(k);
+      if(linea.agrupar==='trim'){ const [y,q]=k.split("-Q"); return `T${q} ${y}`; }
+      return k;
+    }
+
+    // Rango continuo para no dejar huecos
+    const dates = base.map(a=>a.__date).sort((a,b)=>a-b);
+    const start = linea.desde || dates[0] || null;
+    const end   = linea.hasta || dates[dates.length-1] || null;
+    if(start && end){
+      const cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+      while(cursor <= end){
+        const k = keyFor(cursor);
+        pushKey(k, labelFor(k));
+        step(cursor);
+      }
+    }
+
+    // Contar por clave
+    base.forEach(a=>{
+      const d = a.__date;
+      let k;
+      if(linea.agrupar==='mes'){
+        k = a.__mesKey;
+      }else if(linea.agrupar==='trim'){
+        const q = Math.floor(d.getMonth()/3)+1; k = `${d.getFullYear()}-Q${q}`;
+      }else{
+        k = String(d.getFullYear());
+      }
+      counts[k] = (counts[k]||0)+1;
+    });
+
+    const values = keys.map(k=>counts[k]||0);
+
+    const ctx = document.getElementById(canvasId).getContext("2d");
+    const grad = ctx.createLinearGradient(0,0,0,220);
+    grad.addColorStop(0,"rgba(10,154,217,0.25)");
+    grad.addColorStop(1,"rgba(10,154,217,0.02)");
+    charts[canvasId] = new Chart(ctx,{
+      type:"line",
+      data:{ labels, datasets:[{ label:"Accidentes", data:values, fill:true, backgroundColor:grad, borderColor: "#0a9ad9", tension:.25, pointRadius:3, pointHoverRadius:5 }] },
+      options:{
+        maintainAspectRatio:false,
+        plugins:{ legend:{display:false},
+          tooltip:{ callbacks:{ title:(items)=>items[0].label, label:(c)=>` ${fmt(c.parsed.y)} casos` } } },
+        scales:{
+          x:{ ticks:{ autoSkip:true, maxTicksLimit: linea.agrupar==='mes'?12:(linea.agrupar==='trim'?8:12), maxRotation:0, minRotation:0 }, grid:{ display:false }},
+          y:{ beginAtZero:true, grid:{ color:"#eef2f7"} }
+        },
+        onClick:(evt,els)=>{
+          // Solo permite click-to-filter cuando está agrupado por MES
+          if(linea.agrupar!=='mes' || !els.length) return;
+          const idx = els[0].index;
+          const rawKey = keys[idx]; // YYYY-MM
+          if(filtros.mes.has(rawKey)) filtros.mes.delete(rawKey); else filtros.mes.add(rawKey);
+          actualizarTodo();
+        }
+      }
+    });
+  }
+
+  function makeStacked(canvasId, arr){
+    if(charts[canvasId]) charts[canvasId].destroy();
+    const tipos = [...new Set(arr.map(a=>a.tipo||"Sin datos"))].slice(0,8);
+    const estadoMap = groupCount(arr,"estado");
+    const topEstados = Object.entries(estadoMap).sort((a,b)=>b[1]-a[1]).slice(0,5).map(e=>e[0]);
+    const estados = [...topEstados, "Otros"];
+
+    const datasets = estados.map(est=>{
+      const data = tipos.map(t=>{
+        const subset = arr.filter(a=>(a.tipo||"Sin datos")===t);
+        if(est==="Otros"){
+          return subset.filter(a=>!topEstados.includes(a.estado||"Sin datos")).length;
+        }
+        return subset.filter(a=>(a.estado||"Sin datos")===est).length;
+      });
+      return { label: est, data, backgroundColor: setColor(est) };
+    });
+
+    const ctx = document.getElementById(canvasId).getContext("2d");
+    charts[canvasId] = new Chart(ctx,{
+      type:"bar",
+      data:{ labels:tipos, datasets },
+      options:{
+        maintainAspectRatio:false,
+        responsive:true,
+        plugins:{ legend:{ position:"bottom", labels:{ boxWidth:12, boxHeight:12, font:{weight:"bold"} } } },
+        scales:{ x:{ stacked:true }, y:{ stacked:true, beginAtZero:true } }
+      }
+    });
+  }
+
+  /* ===== Render ===== */
+  function actualizarTodo(){
+    const data = aplicarFiltros();
+    renderKPIs(data);
+    renderChips();
+
+    // Donuts
+    makeDonut("chTipo", groupCount(data,"tipo"), "tipo");
+    makeDonut("chEstado", groupCount(data,"estado"), "estado");
+    makeDonut("chFirma", groupCount(data,"firma"), "firma");
+    makeDonut("chAlcohol", groupCount(data,"alcohol"), "alcohol");
+
+    // Barras asignada (la de la fila 1)
+    makeBarHoriz("chAsignada", groupCount(data,"asignada"), "asignada");
+
+    // Línea temporal con rango + agrupación
+    makeLineTemporal("chTemporal", data);
+
+    // Stacked
+    makeStacked("chStacked", data);
+  }
+
+  /* ===== PDF ===== */
+  document.getElementById("btnPDF").addEventListener("click", async ()=>{
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF("p", "mm", "a4");
+    const pdf = new jsPDF("p","mm","a4");
+    const el = document.getElementById("dashboard");
+    const canvas = await html2canvas(el, { scale: 2, backgroundColor:"#fff" });
+    const img = canvas.toDataURL("image/png");
+    const pageW = pdf.internal.pageSize.getWidth();
+    const ratio = canvas.width/canvas.height;
+    const imgW = pageW-20;
+    const imgH = imgW/ratio;
 
-    pdf.setFontSize(20);
-    pdf.setTextColor("#000000");
-    pdf.text("Análisis de Accidentes Juzgado Vial Zona Este", pdf.internal.pageSize.getWidth() / 2, 20, { align: "center" });
-
-    const analisis = document.getElementById("analisis");
-    const canvas = await html2canvas(analisis, { scale: 2, backgroundColor: "#fff" });
-    const imgData = canvas.toDataURL("image/png");
-
-    const imgWidth = 190;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-    pdf.addImage(imgData, "PNG", 10, 30, imgWidth, imgHeight);
-    pdf.save("Analisis_Accidentes_Juzgado_Vial_Zona_Este.pdf");
+    pdf.setFont("helvetica","bold"); pdf.setFontSize(16);
+    pdf.text("Análisis de Accidentes — Juzgado Vial Maipú", pageW/2, 8, {align:"center"});
+    pdf.addImage(img, "PNG", 10, 12, imgW, imgH);
+    pdf.save("Dashboard_Accidentes.pdf");
   });
 
-  generarGraficos();
-</script>
+  document.getElementById("btnLimpiar").addEventListener("click", ()=>{
+    for(const k of ["tipo","estado","asignada","firma","alcohol","mes"]) filtros[k].clear();
+    // no tocamos el rango de la línea aquí
+    actualizarTodo();
+  });
 
+  /* ===== Controles de la línea temporal ===== */
+  const gDesde = document.getElementById("gDesde");
+  const gHasta = document.getElementById("gHasta");
+  const gAgrupar = document.getElementById("gAgrupar");
+
+  document.getElementById("btnAplicarTemp").addEventListener("click", ()=>{
+    linea.desde = gDesde.value ? toDateOnly(new Date(gDesde.value)) : null;
+    linea.hasta = gHasta.value ? toDateOnly(new Date(gHasta.value)) : null;
+    linea.agrupar = gAgrupar.value;
+    actualizarTodo();
+  });
+
+  document.getElementById("btnHoyAnio").addEventListener("click", ()=>{
+    const now = new Date();
+    const d = new Date(now.getFullYear(),0,1);
+    const h = new Date(now.getFullYear(),11,31);
+    gDesde.value = d.toISOString().slice(0,10);
+    gHasta.value = h.toISOString().slice(0,10);
+    linea.desde = d; linea.hasta = h; linea.agrupar = 'mes';
+    gAgrupar.value = 'mes';
+    actualizarTodo();
+  });
+
+  document.getElementById("btn90Temp").addEventListener("click", ()=>{
+    const h = toDateOnly(new Date());
+    const d = toDateOnly(new Date()); d.setDate(d.getDate()-90);
+    gDesde.value = d.toISOString().slice(0,10);
+    gHasta.value = h.toISOString().slice(0,10);
+    linea.desde = d; linea.hasta = h;
+    actualizarTodo();
+  });
+
+  document.getElementById("btnClearTemp").addEventListener("click", ()=>{
+    gDesde.value = ""; gHasta.value = "";
+    linea.desde = null; linea.hasta = null;
+    actualizarTodo();
+  });
+
+  /* ===== Init ===== */
+  async function init(){
+    const snap = await getDocs(collection(db,"accidentes"));
+    accidentes = snap.docs.map(d=>{
+      const a = d.data();
+      const f = a.fecha ? new Date(a.fecha) : (a.fechaAudiencia ? new Date(a.fechaAudiencia) : null);
+      a.__date = (f && !isNaN(f)) ? toDateOnly(f) : null;
+      a.__mesKey = a.__date ? monthKey(a.__date) : "Sin fecha";
+      return a;
+    });
+
+    // Rellenar controles de la línea con el rango real de datos
+    const fechas = accidentes.map(a=>a.__date).filter(Boolean).sort((a,b)=>a-b);
+    if(fechas.length){
+      const d = fechas[0], h = fechas[fechas.length-1];
+      gDesde.value = d.toISOString().slice(0,10);
+      gHasta.value = h.toISOString().slice(0,10);
+      linea.desde = d; linea.hasta = h;
+    }
+
+    // Colores consistentes segun valores existentes
+    ["tipo","estado","asignada","firma","alcohol"].forEach(c=>{
+      [...new Set(accidentes.map(a=> (a[c] ?? "Sin datos") || "Sin datos"))].forEach(v=>setColor(v));
+    });
+
+    actualizarTodo();
+  }
+  init();
+</script>
 </body>
 </html>
